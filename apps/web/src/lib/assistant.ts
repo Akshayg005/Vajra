@@ -67,13 +67,13 @@ export function parse(q: string, snap: WorldSnapshot): Parsed {
         : /(wind|gust|squall|aandhi|आंधी|वारा|ঝড়|ଝଡ଼|காற்று|గాలి|ಗಾಳಿ)/i.test(q)
           ? 'gust'
           : 'thunderstorm';
-  const sector: Sector = /(farm|kisan|किसान|शेतकरी|কৃষক|ଚାଷୀ|விவசாய|రైతు|ರೈತ|crop|फसल)/i.test(q)
+  const sector: Sector = /(farm|kisan|किसान|शेतकरी|কৃষক|ଚାଷୀ|விவசாய|రైతు|ರೈತ|crop|फसल|cattle|outdoor worker|labour)/i.test(q)
     ? 'farmer'
     : /(pilot|aviation|airport|flight|विमान|उड़ान|বিমান|விமான|విమాన|ವಿಮಾನ)/i.test(q)
       ? 'aviation'
       : /(fisher|boat|marine|sea|मछु|मच्छी|নৌকা|মৎস্য|ମତ୍ସ୍ୟ|மீன|మత్స్య|ಮೀನು)/i.test(q)
         ? 'marine'
-        : /(commut|traffic|city|urban|office|metro|यात्रा|शहर)/i.test(q)
+        : /(commut|traffic|city|urban|office|metro|school|parent|event|organis|यात्रा|शहर|स्कूल)/i.test(q)
           ? 'urban'
           : null;
   let intent: Parsed['intent'] = 'point';
@@ -96,6 +96,13 @@ const HZ: Record<Lang, Record<Hazard, string>> = {
   kn: { lightning: 'ಸಿಡಿಲು', hail: 'ಆಲಿಕಲ್ಲು ಮಳೆ', rain: 'ಭಾರಿ ಮಳೆ', gust: 'ಬಲವಾದ ಗಾಳಿ', thunderstorm: 'ಗುಡುಗು ಸಹಿತ ಮಳೆ' },
 };
 
+function variant(key: string) {
+  let h = 2166136261;
+  for (let i = 0; i < key.length; i++) h = Math.imul(h ^ key.charCodeAt(i), 16777619);
+  return h >>> 0;
+}
+const p100 = (p: number) => (p * 100).toFixed(1);
+
 function level(p: number): 'low' | 'moderate' | 'high' {
   return p >= 0.55 ? 'high' : p >= 0.25 ? 'moderate' : 'low';
 }
@@ -116,7 +123,7 @@ export function hazardProb(pn: PointNowcast, h: Hazard) {
 }
 
 export function answerPoint(lang: Lang, place: string, lead: number, h: Hazard, p: number, pn: PointNowcast, cell?: StormCell): string {
-  const pct = Math.round(p * 100);
+  const pct = p100(p);
   const L = LVL[lang][level(p)];
   const hz = HZ[lang][h];
   const eta = pn.etaMin;
@@ -137,8 +144,25 @@ export function answerPoint(lang: Lang, place: string, lead: number, h: Hazard, 
       return `${place}లో రాబోయే ${lead} నిమిషాల్లో ${hz} ప్రమాదం ${L} (${pct}%).${eta !== null && cell ? ` తుఫాను ${cell.id} సుమారు ${eta} నిమిషాల్లో చేరవచ్చు.` : ''}${strike !== null ? ` సమీప పిడుగు ${strike.toFixed(1)} కి.మీ దూరంలో.` : ''}`;
     case 'kn':
       return `${place}ನಲ್ಲಿ ಮುಂದಿನ ${lead} ನಿಮಿಷಗಳಲ್ಲಿ ${hz} ಅಪಾಯ ${L} (${pct}%).${eta !== null && cell ? ` ಚಂಡಮಾರುತ ${cell.id} ಸುಮಾರು ${eta} ನಿಮಿಷಗಳಲ್ಲಿ ತಲುಪಬಹುದು.` : ''}${strike !== null ? ` ಹತ್ತಿರದ ಸಿಡಿಲು ${strike.toFixed(1)} ಕಿ.ಮೀ ದೂರದಲ್ಲಿ.` : ''}`;
-    default:
-      return `${level(p) === 'high' ? 'Yes, likely.' : level(p) === 'moderate' ? 'Possibly.' : 'Unlikely.'} The chance of ${hz} at ${place} in the next ${lead} min is ${L} (${pct}%).${eta !== null && cell ? ` Storm ${cell.id} (${cell.maxDbz.toFixed(0)} dBZ, ${cell.flashRate.toFixed(0)} flashes/min) is moving ${mv} and should arrive in about ${eta} min.` : ' No tracked storm is on course for this place.'}${strike !== null ? ` Nearest lightning in the last 15 min: ${strike.toFixed(1)} km.` : ''}`;
+    default: {
+      // several phrasings with live slots, picked deterministically so replies never repeat word for word
+      const k = variant(`${place}|${lead}|${h}|${pct}|${eta ?? 'x'}`);
+      const verdict = level(p) === 'high' ? ['Yes, likely.', 'Very likely.', 'Expect it.'][k % 3] : level(p) === 'moderate' ? ['Possibly.', 'It could happen.', 'There is a fair chance.'][k % 3] : ['Unlikely.', 'Probably not.', 'Low chance.'][k % 3];
+      const core = [
+        `The chance of ${hz} at ${place} in the next ${lead} min is ${L} (${p100(p)}%).`,
+        `${place}: ${L.toLowerCase()} risk of ${hz} within ${lead} minutes (${p100(p)}%).`,
+        `For ${place} over the next ${lead} min, VAJRA puts ${hz} at ${p100(p)}% — ${L.toLowerCase()}.`,
+      ][(k >>> 2) % 3];
+      const storm =
+        eta !== null && cell
+          ? [
+              ` Storm ${cell.id} (${cell.maxDbz.toFixed(1)} dBZ, ${cell.flashRate.toFixed(1)} flashes/min) is moving ${mv} and should arrive in about ${eta} min.`,
+              ` The nearest threat is storm ${cell.id}, ${cell.maxDbz.toFixed(1)} dBZ with ${cell.flashRate.toFixed(1)} fl/min, heading ${mv}; ETA ~${eta} min.`,
+            ][(k >>> 4) % 2]
+          : [' No tracked storm is on course for this place.', ' None of the tracked storms is heading your way.'][(k >>> 4) % 2];
+      const lt = strike !== null ? [` Nearest lightning in the last 15 min: ${strike.toFixed(1)} km.`, ` Closest strike (15 min): ${strike.toFixed(1)} km away.`][(k >>> 5) % 2] : '';
+      return `${verdict} ${core}${storm}${lt}`;
+    }
   }
 }
 

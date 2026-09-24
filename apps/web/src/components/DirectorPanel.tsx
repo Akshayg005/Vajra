@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { Clapperboard, Crosshair, Lock, RotateCcw, Unlock, X, Zap } from 'lucide-react';
+import { Bug, Clapperboard, Crosshair, Lock, RotateCcw, Unlock, X, Zap } from 'lucide-react';
 import { useState } from 'react';
 import type { AnomalyType, StormType } from '@vajra/contracts';
 import { useStore } from '../store';
@@ -37,14 +37,14 @@ export function DirectorPanel() {
               <Clapperboard className="h-4 w-4" />
               <span className="text-sm font-bold uppercase tracking-[0.2em]">Director Mode</span>
             </div>
-            <button className="btn h-7 w-7 p-0" onClick={() => setOpen(false)}>
+            <button className="btn h-7 w-7 p-0" onClick={() => setOpen(false)} aria-label="Close Director Mode">
               <X className="h-3.5 w-3.5" />
             </button>
           </div>
           <Section title="Scenario">
             <div className="grid grid-cols-1 gap-1">
               {SCENARIOS.map((s) => (
-                <button key={s.id} onClick={() => send({ type: 'scenario', id: s.id })} className={`rounded-md border px-2 py-1.5 text-left text-xs ${snap?.scenario.id === s.id ? 'border-plasma/60 bg-plasma/15 text-white' : 'border-white/10 text-slate-300 hover:bg-white/5'}`}>
+                <button key={s.id} onClick={() => void send({ type: 'scenario', id: s.id })} className={`rounded-md border px-2 py-1.5 text-left text-xs ${snap?.scenario.id === s.id ? 'border-plasma/60 bg-plasma/15 text-white' : 'border-white/10 text-slate-300 hover:bg-white/5'}`}>
                   {s.name}
                 </button>
               ))}
@@ -63,7 +63,7 @@ export function DirectorPanel() {
             </button>
           </Section>
           <Section title="Force a lightning jump">
-            <button className="btn w-full border-volt/40 text-volt" onClick={() => send({ type: 'jump', cellId: selected ?? undefined })}>
+            <button className="btn w-full border-volt/40 text-volt" onClick={() => void send({ type: 'jump', cellId: selected ?? undefined })}>
               <Zap className="h-4 w-4" /> Pulse {selected ? `cell ${selected}` : 'strongest cell'}
             </button>
             <p className="mt-1 text-[11px] text-slate-500">Adds an updraft pulse. The 2σ detector should fire in ~4–8 sim-min.</p>
@@ -79,15 +79,15 @@ export function DirectorPanel() {
           </Section>
           <Section title="Seed">
             <div className="flex gap-1">
-              <input value={seed} onChange={(e) => setSeed(e.target.value.replace(/\D/g, ''))} placeholder={String(snap?.stats.seed ?? '')} className="w-full rounded-md border border-white/10 bg-ink-800 px-2 py-1 font-mono text-xs outline-none focus:border-volt/60" />
+              <input value={seed} onChange={(e) => setSeed(e.target.value.replace(/\D/g, ''))} placeholder={String(useStore.getState().seed)} className="w-full rounded-md border border-white/10 bg-ink-800 px-2 py-1 font-mono text-xs outline-none focus:border-volt/60" />
               <button className="btn px-2" title={lock ? 'Seed locked' : 'Seed unlocked'} onClick={() => setLock(!lock)}>
                 {lock ? <Lock className="h-3.5 w-3.5 text-volt" /> : <Unlock className="h-3.5 w-3.5" />}
               </button>
-              <button className="btn px-2" onClick={() => send({ type: 'seed', value: Number(seed || snap?.stats.seed || 1), lock })}>
+              <button className="btn px-2" onClick={() => void send({ type: 'seed', value: Number(seed || useStore.getState().seed || 1), lock })}>
                 Apply
               </button>
             </div>
-            <button className="btn mt-2 w-full" onClick={() => send({ type: 'reset' })}>
+            <button className="btn mt-2 w-full" onClick={() => void send({ type: 'reset' })}>
               <RotateCcw className="h-3.5 w-3.5" /> Reset scenario
             </button>
           </Section>
@@ -112,12 +112,18 @@ export function DirectorPanel() {
                 </button>
               ))}
             </div>
-            <button className="btn w-full border-sev-orange/40 text-sev-orange" onClick={() => send({ type: 'sensorFail', sensorId: sensorId || undefined, anomaly })}>
+            <button className="btn w-full border-sev-orange/40 text-sev-orange" onClick={() => void send({ type: 'sensorFail', sensorId: sensorId || undefined, anomaly })}>
               Inject {anomaly}
             </button>
           </Section>
+          <Section title="Resilience drill">
+            <button className="btn w-full border-sev-red/40 text-sev-red" onClick={() => useStore.getState().adapter?.crash()}>
+              <Bug className="h-4 w-4" /> Crash the engine worker
+            </button>
+            <p className="mt-1 text-[11px] text-slate-500">The app restarts the worker with the same seed within a second and shows an “auto-restarted” chip.</p>
+          </Section>
           <div className="mt-2 font-mono text-[10px] text-slate-500">
-            seed {snap?.stats.seed} · tick {snap?.stats.tick} · {snap?.stats.tickMs.toFixed(1)} ms/tick · Shift+D to hide
+            base seed {useStore.getState().seed} · scenario seed {snap?.stats.seed} · tick {snap?.stats.tick} · {snap?.stats.tickMs.toFixed(1)} ms/tick · Shift+D to hide
           </div>
         </motion.div>
       )}

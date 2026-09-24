@@ -199,7 +199,7 @@ export class World {
     this.scheduled = this.sc.cells.map((c) => ({ at: now + (c.delayMin - 30) * 60000, lng: c.lng, lat: c.lat, type: c.type, strength: c.strength }));
     // spin-up in 1-minute steps (fast path)
     for (let m = 0; m < SPIN; m++) this.step(60000, true);
-    this.pushEvent('director', `Scenario loaded: ${this.sc.name} (seed ${this.seed})`);
+    this.pushEvent('director', `Scenario loaded: ${this.sc.name} (base seed ${this.baseSeed}${this.seedLocked ? ', locked' : ''})`);
     this.dirty = { nowcast: true, ctt: true, conf: true, nwp: true, density: true };
   }
 

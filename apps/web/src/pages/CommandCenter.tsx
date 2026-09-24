@@ -29,7 +29,7 @@ export default function CommandCenter() {
         <div className="flex-1" />
         <div className="flex max-h-full flex-col gap-3 pb-24">{detail ? <DetailDrawer /> : <CellList />}</div>
       </div>
-      <div className="pointer-events-none absolute inset-x-3 bottom-3 flex flex-col gap-2">
+      <div className="pointer-events-none absolute bottom-3 left-3 right-14 flex flex-col gap-2">
         <ImpactStrip />
         <TimeScrubber />
       </div>
