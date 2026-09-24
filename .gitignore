@@ -7,3 +7,4 @@ __pycache__
 *.pyc
 .venv
 apps/api/data/*.db
+share/

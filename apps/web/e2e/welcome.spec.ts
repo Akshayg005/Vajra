@@ -28,10 +28,12 @@ test('scenario carousel loads a storm into the engine', async ({ page }) => {
   await expect(page.locator('header select').first()).not.toHaveValue('');
 });
 
-test('3D storm toggles between realistic cloud and radar volume', async ({ page }) => {
+test('3D storm switches between aerial vortex, cumulonimbus and radar volume', async ({ page }) => {
   await openApp(page, '/storm3d');
-  await expect(page.getByRole('tab', { name: 'Realistic cloud' })).toHaveAttribute('aria-selected', 'true');
-  await expect(page.getByText(/Raymarched cumulonimbus/)).toBeVisible();
+  await expect(page.getByRole('tab', { name: 'Aerial vortex' })).toHaveAttribute('aria-selected', 'true');
+  await expect(page.getByText(/Volumetric render/)).toBeVisible();
+  await page.getByRole('tab', { name: 'Cumulonimbus' }).click();
+  await expect(page.getByText(/Volumetric cumulonimbus/)).toBeVisible();
   await page.getByRole('tab', { name: 'Radar volume' }).click();
   await expect(page.getByText(/Vertical scale exaggerated/)).toBeVisible();
 });

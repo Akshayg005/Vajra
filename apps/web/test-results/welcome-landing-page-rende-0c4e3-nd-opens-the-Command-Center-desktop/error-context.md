@@ -1,0 +1,199 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e4]:
+  - generic [ref=e6]:
+    - navigation [ref=e7]:
+      - generic [ref=e8]:
+        - img [ref=e10]
+        - generic [ref=e12]: VAJRA
+        - generic [ref=e13]:
+          - link "Command Center" [ref=e14] [cursor=pointer]:
+            - /url: "#/"
+          - link "Alerts" [ref=e15] [cursor=pointer]:
+            - /url: "#/alerts"
+          - link "3D Storm" [ref=e16] [cursor=pointer]:
+            - /url: "#/storm3d"
+          - link "Verification" [ref=e17] [cursor=pointer]:
+            - /url: "#/verification"
+          - link "Assistant" [ref=e18] [cursor=pointer]:
+            - /url: "#/assistant"
+      - generic [ref=e19]:
+        - link "Citizen app" [ref=e20] [cursor=pointer]:
+          - /url: "#/public"
+        - link "Launch" [ref=e21] [cursor=pointer]:
+          - /url: "#/"
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - generic: "7"
+              - generic: storm cells tracked
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - generic: "64"
+              - generic: strikes in the last minute
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - generic: "5"
+              - generic: live warnings
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - generic: "0.17"
+              - generic: CSI at 30 min (verified)
+    - generic [ref=e22]:
+      - generic [ref=e23]: Live · SIH26072 · IMD / MoES
+      - heading "VAJRA" [level=1] [ref=e25]
+      - heading "Nowcasting the storm before it strikes" [level=2] [ref=e26]
+      - paragraph [ref=e27]: "AI thunderstorm & lightning nowcasting for India: 0-3 h forecasts on a 2 km grid, lightning-jump alerts, explainable probabilities and panchayat-level warnings."
+      - generic [ref=e28]:
+        - link "Enter Command Center" [active] [ref=e29] [cursor=pointer]:
+          - /url: "#/"
+        - link "Citizen “Am I safe?”" [ref=e30] [cursor=pointer]:
+          - /url: "#/public"
+  - generic [ref=e45]:
+    - generic:
+      - img "Cumulonimbus with anvil"
+    - generic:
+      - img "City skyline"
+    - generic:
+      - img "Paddy fields and palms"
+    - generic [ref=e46]:
+      - heading "When the sky turns, VAJRA sees it first." [level=2] [ref=e47]:
+        - text: When the sky turns,
+        - text: VAJRA sees it first.
+      - paragraph [ref=e48]: Kalbaisakhi squall lines, Bihar lightning outbreaks, monsoon cloudbursts — tracked cell by cell, flash by flash.
+  - generic [ref=e49]:
+    - generic [ref=e50]:
+      - generic [ref=e51]: One engine, every screen
+      - heading "From radar echo to a farmer’s phone" [level=3] [ref=e52]
+    - generic [ref=e55]:
+      - generic [ref=e56]:
+        - img "Alert Center" [ref=e57]
+        - generic [ref=e58]: Impact-based warnings · CAP 1.2
+      - generic [ref=e59]:
+        - img "3D storm" [ref=e60]
+        - generic [ref=e61]: 3D storm structure
+      - generic [ref=e62]:
+        - img "Verification Lab" [ref=e63]
+        - generic [ref=e64]: Verified skill, not claims
+      - generic [ref=e65]:
+        - img "Command Center" [ref=e66]
+        - generic [ref=e67]: Live Command Center
+        - link "Open the live Command Center" [ref=e69] [cursor=pointer]:
+          - /url: "#/"
+  - generic [ref=e71]:
+    - generic [ref=e72]:
+      - generic [ref=e73]: What judges can click
+      - heading "Real nowcasting logic on a physics-guided simulation" [level=3] [ref=e74]
+    - generic [ref=e75]:
+      - generic [ref=e76]:
+        - img [ref=e77]
+        - generic [ref=e84]: Radar + satellite + lightning fusion
+        - paragraph [ref=e85]: DWR reflectivity, INSAT-3DR/3DS cloud tops, the lightning network, NWP and AWS feed one trust-weighted picture.
+      - generic [ref=e86]:
+        - img [ref=e87]
+        - generic [ref=e89]: 2σ lightning-jump detector
+        - paragraph [ref=e90]: Flags a storm whose flash rate surges beyond two standard deviations — typically 10-30 min before severe weather.
+      - generic [ref=e91]:
+        - img [ref=e92]
+        - generic [ref=e102]: Explainable probabilities
+        - paragraph [ref=e103]: Every P(thunderstorm) splits into factor contributions that add up exactly to the number on screen.
+      - generic [ref=e104]:
+        - img [ref=e105]
+        - generic [ref=e108]: Impact-based warnings
+        - paragraph [ref=e109]: IMD colour codes on panchayat-level polygons, CAP 1.2 feeds, SMS/WhatsApp/siren counters and an alert-fatigue guard.
+      - generic [ref=e110]:
+        - img [ref=e111]
+        - generic [ref=e114]: Honest verification
+        - paragraph [ref=e115]: "Forecasts are stored and scored later against the truth: POD, FAR, CSI, ETS, FSS, Brier and reliability."
+      - generic [ref=e116]:
+        - img [ref=e117]
+        - generic [ref=e120]: Self-healing data
+        - paragraph [ref=e121]: Spikes, frozen feeds, drift and dropouts are detected, excluded from fusion and re-admitted after probation.
+  - generic [ref=e123]:
+    - generic [ref=e124]:
+      - generic [ref=e125]: Six Indian storm scenarios
+      - heading "Pick a storm. The whole system follows." [level=3] [ref=e126]
+    - generic [ref=e127]:
+      - generic [ref=e128]:
+        - button "Previous" [ref=e129] [cursor=pointer]:
+          - img [ref=e130]
+        - button "Next" [ref=e132] [cursor=pointer]:
+          - img [ref=e133]
+      - tablist "Storm scenarios" [ref=e136]:
+        - tab "Odisha coastal storm" [selected] [ref=e137] [cursor=pointer]:
+          - img "Radar view of the Odisha coastal storm scenario" [ref=e138]
+          - generic:
+            - generic: Coastal Odisha
+        - tab "Vidarbha-Marathwada afternoon cells" [ref=e139] [cursor=pointer]:
+          - img "Radar view of the Vidarbha-Marathwada afternoon cells scenario" [ref=e140]
+          - generic:
+            - generic: Vidarbha / Marathwada
+        - tab "Kolkata Kalbaisakhi squall line" [ref=e141] [cursor=pointer]:
+          - img "Radar view of the Kolkata Kalbaisakhi squall line scenario" [ref=e142]
+          - generic:
+            - generic: Gangetic West Bengal
+        - tab "Bihar-Jharkhand lightning outbreak" [ref=e143] [cursor=pointer]:
+          - img "Radar view of the Bihar-Jharkhand lightning outbreak scenario" [ref=e144]
+          - generic:
+            - generic: Bihar / Jharkhand
+        - tab "Mumbai monsoon cell" [ref=e145] [cursor=pointer]:
+          - img "Radar view of the Mumbai monsoon cell scenario" [ref=e146]
+          - generic:
+            - generic: Konkan / Mumbai
+        - tab "Delhi NCR dust-thunder squall" [ref=e147] [cursor=pointer]:
+          - img "Radar view of the Delhi NCR dust-thunder squall scenario" [ref=e148]
+          - generic:
+            - generic: Delhi NCR / Haryana
+      - tabpanel [ref=e149]:
+        - generic [ref=e150]:
+          - paragraph [ref=e151]: Odisha coastal storm A rotating supercell moves toward Bhubaneswar and Puri. Fishing boats are exposed and hail is likely.
+          - button "Load this storm" [ref=e152] [cursor=pointer]:
+            - text: Load this storm
+            - img [ref=e153]
+  - generic [ref=e156]:
+    - generic [ref=e157]:
+      - generic [ref=e158]: How it works
+      - heading "Observation → fusion → AI → warning, every 5 minutes" [level=3] [ref=e159]
+    - generic [ref=e160]:
+      - img [ref=e161]
+      - generic [ref=e163]:
+        - generic [ref=e164]: DWR radar
+        - generic [ref=e165]: INSAT-3DS
+        - generic [ref=e166]: Lightning net
+        - generic [ref=e167]: NWP
+        - generic [ref=e168]: AWS
+        - generic [ref=e169]: QC + fusion
+        - generic [ref=e170]: AI nowcast
+        - generic [ref=e171]: XAI
+        - generic [ref=e172]: Warnings
+        - generic [ref=e173]: Citizens
+  - generic [ref=e177]:
+    - img [ref=e178]
+    - heading "When the rain hits the glass, the warning is already on the phone." [level=3] [ref=e180]
+    - paragraph [ref=e181]: Risk dial, arrival countdown, 30-30 rule timer, nearest shelter and persona advice in eight Indian languages.
+    - link "Open the citizen app" [ref=e182] [cursor=pointer]:
+      - /url: "#/public"
+  - generic [ref=e184]:
+    - heading "Ready for the next Nor’wester?" [level=3] [ref=e185]
+    - generic [ref=e186]:
+      - link "Enter Command Center" [ref=e187] [cursor=pointer]:
+        - /url: "#/"
+      - link "3D storm" [ref=e188] [cursor=pointer]:
+        - /url: "#/storm3d"
+        - img [ref=e189]
+        - text: 3D storm
+      - link "Ask VAJRA" [ref=e192] [cursor=pointer]:
+        - /url: "#/assistant"
+        - img [ref=e193]
+        - text: Ask VAJRA
+    - paragraph [ref=e195]: "Prototype on a physics-guided simulation engine · boundaries: Survey of India outline via DataMeet (CC BY 4.0)"
+```

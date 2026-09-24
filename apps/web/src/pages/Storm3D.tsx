@@ -10,7 +10,9 @@ import { SeverityBadge } from '../components/SeverityBadge';
 import { fx } from '../lib/format';
 import { cn } from '@/lib/utils';
 
-const RealisticStorm = lazy(() => import('@/components/ui/realistic-storm'));
+const VolumetricStorm = lazy(() => import('@/components/ui/volumetric-storm'));
+type View = 'vortex' | 'cumulonimbus' | 'radar';
+type Quality = 'low' | 'high' | 'ultra';
 
 /** Map the engine's life cycle + echo top onto the raymarched cloud's growth / anvil controls. */
 function cloudShape(c: StormCell) {
@@ -163,7 +165,8 @@ export default function Storm3D() {
   const selected = useStore((s) => s.selectedCellId);
   const select = useStore((s) => s.select);
   const [local, setLocal] = useState<string | null>(null);
-  const [view, setView] = useState<'cloud' | 'radar'>('cloud');
+  const [view, setView] = useState<View>('vortex');
+  const [quality, setQuality] = useState<Quality>('high');
   const strongest = [...cells].sort((a, b) => b.maxDbz - a.maxDbz);
   const c = cells.find((x) => x.id === (local ?? selected)) ?? strongest[0];
   if (!c) return <div className="p-6 text-slate-400">No storm cells right now.</div>;
@@ -174,23 +177,47 @@ export default function Storm3D() {
           <Scene c={c} />
         </Canvas>
       ) : (
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_20%,#223350_0%,#0b1322_45%,#03050a_100%)]">
-          <Suspense fallback={<div className="grid h-full place-items-center text-sm text-slate-400">Loading cloud renderer…</div>}>
-            <RealisticStorm {...cloudShape(c)} flashRate={c.flashRate} interactive autoRotate />
+        <div className="absolute inset-0 bg-[#0b1320]">
+          <Suspense fallback={<div className="grid h-full place-items-center text-sm text-slate-400">Building 3D cloud noise and shaders…</div>}>
+            <VolumetricStorm
+              mode={view}
+              intensity={Math.min(1, Math.max(0.35, (c.maxDbz - 30) / 35))}
+              eye={c.type === 'supercell' ? 1.45 : 1.8}
+              {...cloudShape(c)}
+              flashRate={c.flashRate}
+              quality={quality}
+              interactive
+              autoRotate
+            />
           </Suspense>
         </div>
       )}
-      <div className="absolute right-3 top-3 flex rounded-full border border-white/10 bg-ink-900/80 p-1 text-sm backdrop-blur" role="tablist" aria-label="3D view">
-        {(
-          [
-            ['cloud', 'Realistic cloud'],
-            ['radar', 'Radar volume'],
-          ] as const
-        ).map(([k, label]) => (
-          <button key={k} role="tab" aria-selected={view === k} onClick={() => setView(k)} className={cn('rounded-full px-3 py-1 transition', view === k ? 'bg-volt font-semibold text-ink-950' : 'text-slate-300 hover:text-white')}>
-            {label}
-          </button>
-        ))}
+      <div className="absolute right-3 top-3 flex items-center gap-2">
+        <div className="flex rounded-full border border-white/10 bg-ink-900/80 p-1 text-sm backdrop-blur" role="tablist" aria-label="3D view">
+          {(
+            [
+              ['vortex', 'Aerial vortex'],
+              ['cumulonimbus', 'Cumulonimbus'],
+              ['radar', 'Radar volume'],
+            ] as const
+          ).map(([k, label]) => (
+            <button key={k} role="tab" aria-selected={view === k} onClick={() => setView(k)} className={cn('rounded-full px-3 py-1 transition', view === k ? 'bg-volt font-semibold text-ink-950' : 'text-slate-300 hover:text-white')}>
+              {label}
+            </button>
+          ))}
+        </div>
+        {view !== 'radar' && (
+          <select
+            value={quality}
+            onChange={(e) => setQuality(e.target.value as Quality)}
+            aria-label="Render quality"
+            className="rounded-full border border-white/10 bg-ink-900/80 px-3 py-1.5 text-sm text-slate-200 backdrop-blur"
+          >
+            <option value="low">Quality: Low (laptop)</option>
+            <option value="high">Quality: High</option>
+            <option value="ultra">Quality: Ultra (RTX)</option>
+          </select>
+        )}
       </div>
       <div className="panel absolute left-3 top-3 w-[300px] p-3">
         <div className="mb-2 flex items-center justify-between">
@@ -240,7 +267,9 @@ export default function Storm3D() {
         <div className="mt-2 text-[11px] text-slate-500">
           {view === 'radar'
             ? 'Vertical scale exaggerated ×5. Drag to orbit, scroll to zoom. Bolts follow the live flash rate (time-compressed).'
-            : `Raymarched cumulonimbus shaped by this cell's life cycle (${c.stage}) and echo top; in-cloud flashes and CG strokes follow its live flash rate.`}
+            : view === 'vortex'
+              ? `Volumetric render (stylised, not to scale): cloud height and cover follow this cell's reflectivity and echo top; ${c.type === 'supercell' ? 'the mesocyclone tightens the eye' : 'spiral rain bands wrap a clear eye'}; in-cloud flashes follow its live flash rate. Drag to orbit, scroll to zoom.`
+              : `Volumetric cumulonimbus shaped by this cell's life cycle (${c.stage}) and echo top: flat base, tower, anvil, overshooting top and rain shaft; CG strokes follow its live flash rate.`}
         </div>
       </div>
     </div>

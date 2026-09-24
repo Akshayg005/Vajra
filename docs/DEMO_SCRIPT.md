@@ -17,7 +17,7 @@ Setup before judges arrive:
 | 3:50–4:30 | `/public` on a phone | "What a farmer in Bardhaman sees." | Search "Bardhaman": red card with lightning, risk dial, countdown, 30-30 rule, nearest shelter. Pick the **Farmer** persona. Switch the language. |
 | 4:30–5:00 | `/verification` | "We score ourselves. CSI is about 0.4 at 30 min and falls with lead time. It beats extrapolation and persistence, and it isn't perfect. That's what honest numbers look like." | Show skill vs lead and the reliability diagram. |
 | 5:00–5:30 | **Director: sensor failure + crash drill** | "Real networks fail." | **Trigger a sensor failure** (DWR Kolkata dropout). `/sensors` shows it excluded, then re-admitted after probation. Then run the **Resilience drill**: the engine worker crashes and recovers by itself with the same seed. |
-| 5:30–6:00 | `/storm3d` then close | "Here's the storm the forecaster is looking at, shaped by its live life cycle and flash rate. Same contracts plug into DWR, INSAT, the lightning network and NWP. Runs fully offline." | Toggle **Realistic cloud ↔ Radar volume**. End on the cloud. |
+| 5:30–6:00 | `/storm3d` then close | "Here's the storm the forecaster is looking at, shaped by its live life cycle and flash rate. Same contracts plug into DWR, INSAT, the lightning network and NWP. Runs fully offline." | Show **Aerial vortex** (set Quality: Ultra on an RTX-class GPU), then **Cumulonimbus**, then **Radar volume**. End on the vortex. |
 
 Backup lines:
 - **If asked about the assistant:** open `/assistant` and ask "Will lightning hit Patna in the next hour?" in Hindi. The answer streams, with map and chart cards.

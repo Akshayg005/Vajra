@@ -53,7 +53,7 @@ Priority: **M** = Must, **S** = Should, **X** = Stretch. All items were built.
 | 2 | Storm cell tracking (ID, stage, track, cone, speed/dir, type, hail/downburst) | `/` | `CellList`, `vectorLayers` | `StormCell` | M |
 | 3 | Time scrubber −120 … +180 min, 1×/5×/20× | `/` | `TimeScrubber`, TopBar controls | `frameAt(lead)` | M |
 | 4 | Cell Inspector (dBZ, echo top, VIL, flash rate, jump, CTT cooling, CAPE/CIN/shear/PW, sparklines, ETA to districts/panchayats) | drawer | `CellInspector`, `Sparkline` | `StormCell.history`, `env` | M |
-| 5 | 3D Storm View (volume, echo top, overshooting top, charge tripole, channels) plus the new **realistic raymarched cloud** | `/storm3d` | `Storm3D`, `ui/realistic-storm` | `stormVolume`, `boltPath` | S |
+| 5 | 3D Storm View (volume, echo top, overshooting top, charge tripole, channels) plus **volumetric aerial vortex and cumulonimbus** views | `/storm3d` | `Storm3D`, `ui/volumetric-storm` | `stormVolume`, `boltPath` | S |
 | 6 | Explainable AI (contributions sum exactly, plain-language reason) | drawer | `XaiPanel` | `explain()` | M |
 | 7 | Multi-task outputs P(TS), P(lightning), P(hail), P(gust>50), P(heavy rain) | drawer / citizen | `XaiPanel`, `RiskDial` | `MultiTaskProbs` | M |
 | 8 | Confidence / bust map (DWR 250 km rings, initiation zones, disagreement) | `/` layer | `vectorLayers` | `radarCoverage`, CI field | S |
@@ -90,7 +90,7 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for the Mermaid diagrams. Rules:
 | React 18 + Vite 8 + TypeScript (strict) | Fast dev loop, typed contracts end to end |
 | Tailwind 3 | Consistent tokens (storm palette, severity colours), no CSS drift |
 | MapLibre GL 6 + deck.gl 9 | Open-source vector basemap offline; GPU layers for strikes, cones and polygons |
-| react-three-fiber / drei / three | 3D storm, intro globe, raymarched cloud |
+| react-three-fiber / drei / three | 3D storm, intro globe, volumetric clouds |
 | Framer Motion | Scroll choreography, reveals, eased toasts and drawers |
 | ECharts 6 | Verification curves, reliability, histograms |
 | Zustand | One store, cheap selectors, no prop drilling |
@@ -238,7 +238,7 @@ docs/  scripts/
 | --- | --- | --- |
 | Simulation behind real adapter interfaces | Not real data | Stubs show exactly how each feed maps in |
 | Worker engine | Serialisation cost | Snapshots are compact; rasters are sent only every 5 sim-min |
-| Raymarched cloud | GPU cost | Adaptive resolution (~0.45 MP), IntersectionObserver pause, radar-volume view |
+| Volumetric clouds | GPU cost (heavy by design) | Quality Low / High / Ultra (72 / 128 / 200 steps, 0.42 / 1.1 / 2.4 MP), adaptive stepping, radar-volume view |
 | Weak laptop GPU | – | Lightning shaders render at 60 % resolution and pause off-screen; projector mode |
 | Browsers without Web Speech | – | Text chat still works; the mic button hides |
 | Offline | – | Everything bundled; online satellite basemap is off by default |

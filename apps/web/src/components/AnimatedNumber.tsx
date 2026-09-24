@@ -25,7 +25,8 @@ export function AnimatedNumber({
     start.current = performance.now();
     cancelAnimationFrame(raf.current);
     const step = (t: number) => {
-      const k = Math.min(1, (t - start.current) / 400);
+      // rAF timestamps can predate the effect's performance.now(); clamp so a long frame never extrapolates
+      const k = Math.min(1, Math.max(0, (t - start.current) / 400));
       const e = 1 - Math.pow(1 - k, 3);
       setShown(from.current + (target.current - from.current) * e);
       if (k < 1) raf.current = requestAnimationFrame(step);

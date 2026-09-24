@@ -113,7 +113,7 @@ flowchart LR
 | Adapters | `src/data/adapters.ts`, `apiAdapter.ts` | Same `DataAdapter` interface for simulation, API and real-feed stubs |
 | Store | `src/store.ts`, `src/selectors.ts` | One snapshot; derived counts come only from selectors |
 | Map | `src/map/*` | MapLibre GL 6 + deck.gl `MapboxOverlay`, bitmap rasters (retired after 3 s to avoid GPU detach warnings) |
-| Storm UI kit | `src/components/ui/*` | `Lightning` (WebGL, Odyssey), `RealisticStorm` (raymarched, adaptive resolution), `ParallaxStorm`, `ScrollChoreography`, `SqueezeCarousel`, `LiquidEffectAnimation`, `Reveal`, `StormHero` |
+| Storm UI kit | `src/components/ui/*` | `Lightning` (WebGL, Odyssey), `VolumetricStorm` (full-screen volumetric raymarcher: tileable Perlin-Worley 3D noise, HG phase, multiple-scattering octaves, adaptive stepping and resolution), `RealisticStorm` (lightweight hero cloud), `ParallaxStorm`, `ScrollChoreography`, `SqueezeCarousel`, `LiquidEffectAnimation`, `Reveal`, `StormHero` |
 | Pages | `src/pages/*` | Route-level lazy chunks; three.js and ECharts load on demand |
 
 Budget: the initial JS is about 119 KB gzip. The map chunk (about 540 KB gzip) loads with the Command Center. three.js, ECharts and liquid1 are lazy.

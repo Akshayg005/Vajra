@@ -6,7 +6,7 @@ By default everything runs **fully offline** in the browser. A seeded, physics-g
 
 ![Landing](docs/screenshots/01-welcome-hero.jpg)
 
-| Command Center | 3D storm (raymarched cloud) | Citizen app |
+| Command Center | 3D storm (volumetric vortex) | Citizen app |
 | --- | --- | --- |
 | ![](docs/screenshots/07-command-center.jpg) | ![](docs/screenshots/09-3d-storm-realistic.jpg) | ![](docs/screenshots/17-citizen-mobile.jpg) |
 
@@ -88,7 +88,7 @@ With a locked seed, the cells, strikes, alerts and sensor faults are identical o
 | `#/welcome` | Landing page: Odyssey lightning hero with a live raymarched cumulonimbus, parallax storm scene, scroll choreography, scenario carousel, liquid "monsoon glass" section |
 | `#/` | **Command Center**: radar/IR/lightning map, nowcast bands, tracks and 60-min cones, warning polygons, cell list, event log, impact strip, time scrubber (−120 … +180 min) |
 | `#/alerts` | Alert Center: drafts → issue / merge / suppress / edit polygon, 8-language bulletin preview, CAP 1.2 XML, CSV, print/PDF sheet, delivery counters |
-| `#/storm3d` | 3D Storm: **Realistic cloud** (raymarched Cb driven by the cell's life cycle and flash rate) or **Radar volume** (dBZ point cloud, charge tripole, bolts) |
+| `#/storm3d` | 3D Storm: **Aerial vortex** and **Cumulonimbus** (physically based volumetric clouds with Perlin-Worley noise, self-shadowing, multiple scattering, cloud shadows on a lit sea or land; quality Low / High / Ultra) or **Radar volume** (dBZ point cloud, charge tripole, bolts) |
 | `#/compare` | Coarse NWP vs VAJRA 2 km nowcast, side by side |
 | `#/verification` | Verification Lab: POD / FAR / CSI / ETS / FSS / Brier vs lead time, reliability diagram, VAJRA vs extrapolation vs persistence |
 | `#/sensors` | Sensor Health: fusion trust diagram, sensor map, anomaly timeline (spikes, frozen, drift, dropouts) |
