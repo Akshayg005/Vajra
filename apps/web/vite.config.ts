@@ -63,10 +63,12 @@ export default defineConfig({
     chunkSizeWarningLimit: 3000,
     rollupOptions: {
       output: {
-        manualChunks: {
-          map: ['maplibre-gl', '@deck.gl/core', '@deck.gl/layers', '@deck.gl/mapbox'],
-          three: ['three', '@react-three/fiber', '@react-three/drei'],
-          charts: ['echarts'],
+        manualChunks(id: string) {
+          if (!id.includes('node_modules')) return undefined;
+          if (/[\\/](maplibre-gl|@deck\.gl|@luma\.gl|@loaders\.gl|@math\.gl)[\\/]/.test(id)) return 'map';
+          if (/[\\/](three|@react-three|three-stdlib)[\\/]/.test(id)) return 'three';
+          if (/[\\/](echarts|zrender)[\\/]/.test(id)) return 'charts';
+          return undefined;
         },
       },
     },

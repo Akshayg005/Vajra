@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import maplibregl from 'maplibre-gl';
+import { maplibregl } from '../map/maplibre';
 import { MapboxOverlay } from '@deck.gl/mapbox';
 import { BitmapLayer } from '@deck.gl/layers';
 import { COORDINATE_SYSTEM, type Layer, type PickingInfo } from '@deck.gl/core';

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import maplibregl from 'maplibre-gl';
+import { maplibregl } from '../../map/maplibre';
 import { MapboxOverlay } from '@deck.gl/mapbox';
 import { PolygonLayer, ScatterplotLayer } from '@deck.gl/layers';
 import type { PickingInfo } from '@deck.gl/core';
