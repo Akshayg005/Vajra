@@ -2,7 +2,8 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { Bell, CloudLightning, Cpu, GitMerge, Sparkles, Users, Zap } from 'lucide-react';
 import type { EngineEvent } from '@vajra/contracts';
 import { useStore } from '../store';
-import { SEV_HEX, fmtIST } from '../lib/format';
+import { SEV_HEX } from '../lib/format';
+import { ago, useSimNow } from '../lib/useNow';
 
 const ICON: Record<EngineEvent['kind'], typeof Bell> = {
   jump: Zap,
@@ -18,13 +19,14 @@ const ICON: Record<EngineEvent['kind'], typeof Bell> = {
 };
 
 export function EventFeed({ limit = 9 }: { limit?: number }) {
-  const events = useStore((s) => s.snap?.events ?? []);
+  const events = useStore((s) => s.snap?.events);
   const select = useStore((s) => s.select);
-  const list = [...events].filter((e) => e.kind !== 'cell_dead').reverse().slice(0, limit);
+  const now = useSimNow();
+  const list = [...(events ?? [])].filter((e) => e.kind !== 'cell_dead').reverse().slice(0, limit);
   return (
-    <div className="panel pointer-events-auto w-[248px] p-3">
+    <div className="panel pointer-events-auto w-[260px] p-3">
       <div className="panel-title mb-2">Live event log</div>
-      <div className="space-y-1.5">
+      <div className="space-y-1.5" aria-live="polite">
         <AnimatePresence initial={false}>
           {list.map((e) => {
             const I = ICON[e.kind];
@@ -39,8 +41,8 @@ export function EventFeed({ limit = 9 }: { limit?: number }) {
                 className="flex w-full items-start gap-2 rounded-md px-1 py-0.5 text-left hover:bg-white/5"
               >
                 <I className="mt-0.5 h-3.5 w-3.5 shrink-0" style={{ color: e.severity ? SEV_HEX[e.severity] : e.kind === 'jump' ? '#22d3ee' : '#94a3b8' }} />
-                <span className="flex-1 text-[11px] leading-snug text-slate-300">{e.text}</span>
-                <span className="font-mono text-[10px] text-slate-500">{fmtIST(e.t)}</span>
+                <span className="flex-1 text-[11.5px] leading-snug text-slate-300">{e.text}</span>
+                <span className="whitespace-nowrap font-mono text-[10px] text-slate-500">{ago(e.t, now)}</span>
               </motion.button>
             );
           })}

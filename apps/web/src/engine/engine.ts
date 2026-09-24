@@ -27,10 +27,28 @@ import { maybeCrowdReport, nextReportId, resetReportIds, verifyReport } from './
 import { inIndia } from './places';
 import { LEADS, Verifier } from './verification';
 import { clamp, distanceKm, istHour, moveKm } from './geo';
+import { RingBuffer } from './ring';
 
 export const TICK_MS = 250;
-/** 1x = demo live rate: 30 simulated seconds per real second (1 sim-minute every 2 s). */
-export const LIVE_RATE = 30;
+/** 1x = real time: the simulation clock follows the real IST clock. 5x / 20x (and 60x in Director Mode) accelerate it. */
+export const LIVE_RATE = 1;
+
+export interface WorldOptions {
+  /** seed for the PRNG; the UI derives it from date + session unless ?seed= locks it */
+  seed: number;
+  /** locked seeds survive scenario switches and resets unchanged (rehearsal mode) */
+  locked: boolean;
+  /** wall clock (ms since epoch). Injected so the engine stays pure and testable. */
+  clock: () => number;
+}
+
+/** 32-bit integer hash used to derive per-scenario seeds from a base seed */
+export function mixSeed(a: number, b: number) {
+  let h = (a ^ Math.imul(b + 0x9e3779b9, 0x85ebca6b)) >>> 0;
+  h = Math.imul(h ^ (h >>> 16), 0x7feb352d) >>> 0;
+  h = Math.imul(h ^ (h >>> 15), 0x846ca68b) >>> 0;
+  return (h ^ (h >>> 16)) >>> 0;
+}
 const FINE_KM = 2;
 const NC_F = 2; // nowcast grid = 4 km
 const VER_F = 4; // verification grid = 8 km
@@ -61,7 +79,17 @@ export interface FrameAt {
 export class World {
   sc!: Scenario;
   seed = 20260726;
+  baseSeed = 20260726;
   seedLocked = false;
+  clock: () => number = () => 0;
+  /** real time at which the scenario's 'now' starts; physics hour = scenario start hour + elapsed */
+  phaseT0 = 0;
+  jrng!: Rng;
+  latencyMs = 120;
+  nextDropoutAt = 0;
+  nextBustAt = 0;
+  strikeRing = new RingBuffer<LightningStrike>(16000);
+  private recentCache: { tick: number; list: LightningStrike[] } = { tick: -1, list: [] };
   speed = 1;
   paused = false;
   t = 0;
@@ -69,7 +97,6 @@ export class World {
   rng!: Rng;
   noise!: ReturnType<typeof makeNoise>;
   cells: CellAgent[] = [];
-  strikes: LightningStrike[] = [];
   strikeSeq = 0;
   strikesTotal = 0;
   grid!: Grid;
@@ -107,19 +134,36 @@ export class World {
   lastTickMs = 0;
   dirty = { nowcast: true, ctt: true, conf: true, nwp: true, density: true };
 
-  constructor(scenarioId = SCENARIOS[0].id) {
-    this.load(scenarioId);
+  constructor(scenarioId = SCENARIOS[0].id, opts: Partial<WorldOptions> = {}) {
+    this.baseSeed = (opts.seed ?? 20260726) >>> 0;
+    this.seedLocked = opts.locked ?? false;
+    this.clock = opts.clock ?? (() => Date.UTC(2026, 3, 14, 10, 0, 0));
+    this.load(scenarioId, true);
   }
 
-  load(id: string) {
+  /** strikes of the last 30 min (cached per tick) */
+  get strikes(): LightningStrike[] {
+    if (this.recentCache.tick !== this.tick) this.recentCache = { tick: this.tick, list: this.strikeRing.since(this.t - 30 * 60000) };
+    return this.recentCache.list;
+  }
+
+  /** hour used for convective forcing: follows the scenario's afternoon regardless of the real time of day */
+  phaseHour(t = this.t) {
+    return (((this.sc.startHourIST + (t - this.phaseT0) / 3.6e6) % 24) + 24) % 24;
+  }
+
+  load(id: string, first = false) {
     this.sc = scenarioById(id);
-    if (!this.seedLocked) this.seed = (this.seed * 1664525 + 1013904223) >>> 0;
+    if (!this.seedLocked && !first) this.baseSeed = (Math.imul(this.baseSeed, 1664525) + 1013904223) >>> 0;
+    this.seed = mixSeed(this.baseSeed, SCENARIOS.findIndex((s) => s.id === this.sc.id) + 1);
     this.rng = new Rng(this.seed);
+    this.jrng = this.rng.fork(99);
     this.noise = makeNoise(this.seed);
     resetCellCounter();
     resetReportIds();
     this.cells = [];
-    this.strikes = [];
+    this.strikeRing.clear();
+    this.recentCache = { tick: -1, list: [] };
     this.strikesTotal = 0;
     this.events = [];
     this.reports = [];
@@ -144,7 +188,11 @@ export class World {
     this.verifier = new Verifier(vw, vh);
     this.sensors = makeSensors(this.rng.fork(7), this.sc.center, this.sc.bbox);
     // "now" is the scenario start hour on a fixed date in the scenario month (IST)
-    const now = Date.UTC(2026, this.sc.month - 1, 14, 0, 0, 0) + (this.sc.startHourIST - 5.5) * 3600e3;
+    // "now" is the real wall clock (IST shown in the UI); convective forcing follows the scenario's hour
+    const now = Math.floor(this.clock() / 1000) * 1000;
+    this.phaseT0 = now;
+    this.nextDropoutAt = now + this.jrng.range(3, 6) * 60000;
+    this.nextBustAt = now - 60 * 60000;
     const SPIN = 240; // minutes of history spun up before "now"
     this.t = now - SPIN * 60000;
     this.lastNowcastAt = this.lastSensorAt = this.lastCttAt = this.lastVerIssueAt = this.lastConfAt = this.lastNwpAt = this.lastHistAt = -Infinity;
@@ -164,7 +212,7 @@ export class World {
   envAt(lng: number, lat: number, c?: CellAgent): EnvProfile {
     const { n3 } = this.noise;
     const tm = this.t / (180 * 60000);
-    const hr = istHour(this.t);
+    const hr = this.phaseHour();
     const diurnal = clamp(0.55 + 0.45 * Math.sin(((hr - 9) / 24) * Math.PI * 2), 0.2, 1);
     const cape = clamp(this.sc.cape * (0.75 + 0.35 * n3(lng * 0.8, lat * 0.8, tm)) * (0.6 + 0.5 * diurnal), 150, 5200);
     const stage = c?.stage;
@@ -187,7 +235,7 @@ export class World {
   }
 
   private spawnRandom(dtMin: number) {
-    const hr = istHour(this.t);
+    const hr = this.phaseHour();
     const diurnal = clamp(Math.sin(((hr - 10) / 12) * Math.PI), 0.1, 1);
     const lambda = (this.sc.spawnRatePerHour / 60) * dtMin * diurnal;
     const k = this.rng.poisson(lambda);
@@ -239,7 +287,7 @@ export class World {
         peakKa: Math.round(kA * 10) / 10,
         cellId: c.id,
       };
-      this.strikes.push(s);
+      this.strikeRing.push(s);
       this.strikesTotal++;
       if (cg) {
         const gx = Math.round(this.densityGrid.i(lng));
@@ -277,8 +325,7 @@ export class World {
     this.cells = this.cells.filter((c) => !c.dead);
     // strikes: keep 30 min
     const cutoff = this.t - 30 * 60000;
-    if (this.strikes.length && this.strikes[0].t < cutoff) this.strikes = this.strikes.filter((s) => s.t >= cutoff);
-    if (this.strikes.length > 12000) this.strikes = this.strikes.slice(-12000);
+    this.strikeRing.dropBefore(cutoff);
     // density decays with an e-folding time of 6 h
     if (this.tick % 20 === 0) {
       const f = Math.exp(-(dtMin * 20) / 360);
@@ -326,6 +373,17 @@ export class World {
       if (this.reports.length > 150) this.reports.shift();
       if (!spin) this.pushEvent('report', `Citizen report ${rep.id}: ${rep.event} at ${rep.place} -> ${rep.status.toUpperCase()}`, rep.status === 'verified' ? 'yellow' : undefined);
     }
+    // feed latency jitter (40-400 ms, log-normal around ~120 ms)
+    this.latencyMs = clamp(this.latencyMs * 0.6 + 0.4 * this.jrng.logNormal(120, 0.55), 40, 400);
+    // scheduled imperfection: one feed drops out roughly every 10 min and self-heals 2-4 min later
+    if (this.t >= this.nextDropoutAt) {
+      const cand = this.sensors.filter((x) => x.state === 'ok' && (x.kind !== 'dwr' || distanceKm(x.lng, x.lat, this.sc.center[0], this.sc.center[1]) < 450));
+      if (cand.length) {
+        const s = cand[Math.floor(this.jrng.f() * cand.length)];
+        injectFault(s, 'dropout', this.t, this.jrng, this.jrng.range(2, 4));
+      }
+      this.nextDropoutAt = this.t + this.jrng.range(8, 12) * 60000;
+    }
     this.lastTickMs = performance.now() - t0;
   }
 
@@ -338,10 +396,11 @@ export class World {
   private bustIds = new Set<string>();
   /** built-in imperfection: one storm per session is forecast to grow but collapses (a real false alarm). */
   private assignBust() {
-    if (this.bustAssigned) return;
+    if (this.t < this.nextBustAt) return;
     const cand = this.cells.find((c) => c.type === 'pulse' && c.stage === 'growth' && (this.probs.get(c.id)?.thunderstorm ?? 0) > 0.45 && !c.injected);
     if (cand && this.alerts.alerts.length >= 2) {
       this.bustAssigned = true;
+      this.nextBustAt = this.t + this.jrng.range(40, 60) * 60000;
       this.bustIds.add(cand.id);
       cand.matureMin = 3;
       cand.decayMin = 12;
@@ -436,7 +495,7 @@ export class World {
     const fb: [number, number] = [steer[0] * 111.32 * Math.cos((this.sc.center[1] * Math.PI) / 180) / (FINE_KM * NC_F), -steer[1] * 111.32 / (FINE_KM * NC_F)];
     this.motion = prev ? blockMatch(prev.d, coarse, w, h, 8, 4, [Math.round(fb[0]), Math.round(fb[1])]) : blockMatch(coarse, coarse, w, h, 8, 0, fb);
     const fields = new Map<number, { dbz: Float32Array; prob: Float32Array }>();
-    const hr = istHour(this.t);
+    const hr = this.phaseHour();
     for (const lead of NC_LEADS) {
       const steps = lead / 10;
       const dbz = advect(coarse, w, h, this.motion, steps, 1, this.growthTerm(lead, this.grid, NC_F));
@@ -620,7 +679,7 @@ export class World {
         strikesLastMin: lastMin,
         strikesTotal: this.strikesTotal,
         source: 'simulation',
-        latencyMs: 0,
+        latencyMs: Math.round(this.latencyMs),
       },
       scenario: this.sc,
       cells,
@@ -635,7 +694,7 @@ export class World {
       sensors: this.sensors.map(({ injected: _i, injectedUntil: _u, base: _b, driftAcc: _d, healedAt: _h, hits: _x, clean: _y, ...s }) => ({ ...s, series: s.series.slice() })),
       reports: this.reports.slice(),
       verification: this.verifier.summary(),
-      regime: classifyRegime(this.sc, pwS / n, shS / n, cpS / n, istHour(this.t)),
+      regime: classifyRegime(this.sc, pwS / n, shS / n, cpS / n, this.phaseHour()),
       events: this.events.slice(-60),
     };
   }
@@ -749,6 +808,26 @@ export class World {
           injectFault(s, cmd.anomaly, this.t, this.rng);
           this.pushEvent('director', `Director: injected ${cmd.anomaly} fault into ${s.name}`);
         }
+        break;
+      }
+      case 'alertIssue': {
+        const a = this.alerts.issue(cmd.id, this.t);
+        if (a) this.pushEvent('alert', `${a.id} ISSUED by forecaster (${a.severity.toUpperCase()}) — dissemination started`, a.severity, a.cellId);
+        break;
+      }
+      case 'alertSuppress': {
+        const a = this.alerts.suppress(cmd.id, this.t);
+        if (a) this.pushEvent('alert_update', `${a.id} suppressed by forecaster (repeat/duplicate)`, undefined, a.cellId);
+        break;
+      }
+      case 'alertMerge': {
+        const a = this.alerts.merge(cmd.id, cmd.into, this.t);
+        if (a) this.pushEvent('alert_update', `${cmd.id} merged into ${cmd.into}`, a.severity, a.cellId);
+        break;
+      }
+      case 'alertPolygon': {
+        const a = this.alerts.editPolygon(cmd.id, cmd.polygon, this.sc, this.t, this.rng);
+        if (a) this.pushEvent('alert_update', `${a.id} polygon edited — exposure recomputed (${Math.round(a.impact.population / 1000)}k people)`, a.severity, a.cellId);
         break;
       }
       case 'report': {

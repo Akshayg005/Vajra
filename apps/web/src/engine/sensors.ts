@@ -96,7 +96,7 @@ export function makeSensors(rng: Rng, center: [number, number], bbox: [number, n
 export function stepSensors(sensors: SensorAgent[], t: number, rng: Rng, localTempAt: (lng: number, lat: number) => number, onEvent: (s: SensorAgent, text: string) => void) {
   for (const s of sensors) {
     // random fault injection: ~1 fault per sensor per ~30 h of sim time
-    if (!s.injected && rng.chance(0.00012)) injectFault(s, rng.pick(['spike', 'frozen', 'drift', 'dropout'] as AnomalyType[]), t, rng);
+    if (!s.injected && rng.chance(0.00003)) injectFault(s, rng.pick(['spike', 'frozen', 'drift', 'dropout'] as AnomalyType[]), t, rng);
     if (s.injected && t > s.injectedUntil) {
       s.injected = null;
       s.driftAcc = 0;
@@ -161,9 +161,9 @@ function nominal(s: SensorStatus) {
   return s.kind === 'dwr' ? 180 : s.kind === 'satellite' ? 420 : s.kind === 'lightning' ? 4 : s.kind === 'nwp' ? 3600 : 60;
 }
 
-export function injectFault(s: SensorAgent, a: AnomalyType, t: number, rng: Rng) {
+export function injectFault(s: SensorAgent, a: AnomalyType, t: number, rng: Rng, minutes?: number) {
   s.injected = a;
-  s.injectedUntil = t + rng.range(12, 25) * 60000;
+  s.injectedUntil = t + (minutes ?? rng.range(12, 25)) * 60000;
 }
 
 /** radar coverage quality at a point: best active DWR within range */

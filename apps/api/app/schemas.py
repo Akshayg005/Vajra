@@ -141,6 +141,9 @@ class Alert(BaseModel):
     status: Literal["draft", "active", "updated", "expired", "merged", "suppressed"]
     suppressed: int
     mergedFrom: list[str]
+    issuedBy: Optional[Literal["auto", "forecaster"]] = None
+    edited: bool = False
+    mergedInto: Optional[str] = None
     falseAlarm: Optional[bool] = None
 
 

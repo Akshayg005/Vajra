@@ -164,14 +164,22 @@ export function updatePhysics(c: CellAgent, t: number, dtMin: number, env: EnvPr
   const eff = clamp(c.strength * I * envK, 0, 1.3);
   c.intensity = eff;
   const typeTop = c.type === 'supercell' ? 2.5 : c.type === 'squall' ? 1 : 0;
-  c.maxDbz = clamp(18 + 47 * eff + (c.type === 'supercell' ? 4 * eff : 0) + rng.normal(0, 0.6), 10, 72);
-  c.echoTopKm = clamp(3 + 12.5 * eff + typeTop * eff + rng.normal(0, 0.15), 2, 18.5);
+  // bounded change per tick: radar-observed cores cannot jump more than ~4 dBZ/min or tops ~0.8 km/min
+  const dbzTarget = clamp(18 + 47 * eff + (c.type === 'supercell' ? 4 * eff : 0) + rng.normal(0, 0.6), 10, 72);
+  const topTarget = clamp(3 + 12.5 * eff + typeTop * eff + rng.normal(0, 0.15), 2, 18.5);
+  const dStep = 4 * dtMin + 0.3;
+  const tStep = 0.8 * dtMin + 0.05;
+  c.maxDbz = c.maxDbz + clamp(dbzTarget - c.maxDbz, -dStep, dStep);
+  c.echoTopKm = c.echoTopKm + clamp(topTarget - c.echoTopKm, -tStep, tStep);
   const zCapped = Math.min(c.maxDbz, 56);
   const effDepthM = 0.42 * c.echoTopKm * 1000 * clamp((c.maxDbz - 18) / 40, 0, 1);
   c.vil = clamp(3.44e-6 * Math.pow(10, zCapped * 0.05714) * effDepthM, 0, 90);
   const pr = 3.44e-5 * Math.pow(c.echoTopKm, 4.9) * lightningFactor;
   c.jumpBoost = 1 + (c.jumpBoost - 1) * Math.exp(-dtMin / 12);
-  c.flashRate = clamp(pr * c.jumpBoost * (0.9 + 0.2 * Math.sin(t / 97000 + c.wander)), 0, 160);
+  // flash rate is an EMA (1-min time constant) of the Price-Rind rate so it never flickers between ticks
+  const frTarget = clamp(pr * c.jumpBoost * (0.9 + 0.2 * Math.sin(t / 97000 + c.wander)), 0, 160);
+  const a = 1 - Math.exp(-dtMin / 1.0);
+  c.flashRate = c.flashRate + (frTarget - c.flashRate) * a;
   c.cttK = clamp(303 - 6.5 * c.echoTopKm, 192, 290);
   const dCtt = prevCtt - c.cttK; // positive = cooling
   c.cttCoolingK15 = dtMin > 0 ? c.cttCoolingK15 * 0.7 + 0.3 * (dCtt / dtMin) * 15 : c.cttCoolingK15;

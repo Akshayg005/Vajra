@@ -100,3 +100,75 @@ body {
     transition-duration: 0.001ms !important;
   }
 }
+
+/* ---------- printable bulletin (Print / Save as PDF) ---------- */
+.print-only {
+  display: none;
+}
+@media print {
+  html,
+  body,
+  #root {
+    height: auto;
+    overflow: visible;
+    background: #fff !important;
+    color: #000 !important;
+  }
+  body * {
+    visibility: hidden;
+  }
+  .print-only,
+  .print-only * {
+    visibility: visible;
+    color: #000 !important;
+  }
+  .print-only {
+    display: block;
+    position: absolute;
+    inset: 0;
+    padding: 24mm 18mm;
+    font-family: 'Noto Sans Devanagari', 'Noto Sans Bengali', 'Noto Sans Oriya', 'Noto Sans Tamil', 'Noto Sans Telugu', 'Noto Sans Kannada', Inter, sans-serif;
+  }
+  .print-only h1 {
+    font-size: 20pt;
+    margin-bottom: 6pt;
+  }
+  .print-only pre {
+    white-space: pre-wrap;
+    font-size: 12pt;
+    line-height: 1.5;
+    border: 1px solid #999;
+    padding: 10pt;
+  }
+  @page {
+    size: A4;
+    margin: 0;
+  }
+}
+
+/* ---------- projector mode (P): larger minimum text for 1920x1080 projectors ---------- */
+html.projector {
+  font-size: 17px;
+}
+html.projector .text-\[9px\],
+html.projector .text-\[9\.5px\],
+html.projector .text-\[10px\],
+html.projector .text-\[10\.5px\] {
+  font-size: 12.5px !important;
+}
+html.projector .text-\[11px\],
+html.projector .text-\[11\.5px\],
+html.projector .text-xs,
+html.projector .text-\[12px\],
+html.projector .text-\[12\.5px\] {
+  font-size: 14px !important;
+}
+html.projector .text-sm,
+html.projector .text-\[13px\] {
+  font-size: 15px !important;
+}
+
+:focus-visible {
+  outline: 2px solid #22d3ee;
+  outline-offset: 2px;
+}

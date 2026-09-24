@@ -207,7 +207,13 @@ export interface Alert {
   impact: ImpactEstimate;
   delivery: DeliveryCounter[];
   bulletin: string;
-  status: 'active' | 'updated' | 'expired' | 'merged';
+  /** draft = awaiting forecaster (auto-issues after 3 min); suppressed = forecaster stopped dissemination */
+  status: 'draft' | 'active' | 'updated' | 'expired' | 'merged' | 'suppressed';
+  issuedBy: 'auto' | 'forecaster' | null;
+  /** polygon edited by a forecaster (engine no longer moves it) */
+  edited: boolean;
+  /** id of the alert this one was merged into */
+  mergedInto?: string;
   /** repeats suppressed by the fatigue guard */
   suppressed: number;
   mergedFrom: string[];
@@ -388,7 +394,11 @@ export type DirectorCommand =
   | { type: 'reset' }
   | { type: 'sensorFail'; sensorId?: string; anomaly: AnomalyType }
   | { type: 'report'; report: Omit<CitizenReport, 'id' | 'status' | 'matchScore' | 'matchReason'> }
-  | { type: 'pause'; value: boolean };
+  | { type: 'pause'; value: boolean }
+  | { type: 'alertIssue'; id: string }
+  | { type: 'alertSuppress'; id: string }
+  | { type: 'alertMerge'; id: string; into: string }
+  | { type: 'alertPolygon'; id: string; polygon: LngLat[] };
 
 /** REST + WS contracts. Mirrored in apps/api. */
 export interface ApiContracts {

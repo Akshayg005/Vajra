@@ -67,7 +67,7 @@ export function predict(c: CellAgent): MultiTaskProbs {
   for (const k of Object.keys(W) as (keyof MultiTaskProbs)[]) {
     let L = W[k].b + p0 * (k === 'thunderstorm' || k === 'lightning' ? 1 : 0.6);
     for (const f of Object.keys(META) as Feat[]) L += W[k].w[f] * z(f, x[f]);
-    out[k] = Math.min(0.99, Math.max(0.01, sigmoid(L)));
+    out[k] = Math.min(0.97, Math.max(0.01, sigmoid(L)));
   }
   return out;
 }
@@ -84,7 +84,7 @@ export function explain(c: CellAgent, target: keyof MultiTaskProbs = 'thundersto
   const bPrime = W[target].b + prior(c) * (target === 'thunderstorm' || target === 'lightning' ? 1 : 0.6);
   const terms = (Object.keys(META) as Feat[]).map((f) => ({ f, logit: W[target].w[f] * z(f, x[f]) }));
   const L = bPrime + terms.reduce((a, t) => a + t.logit, 0);
-  const p = Math.min(0.99, Math.max(0.01, sigmoid(L)));
+  const p = Math.min(0.97, Math.max(0.01, sigmoid(L)));
   const p0 = sigmoid(bPrime);
   const denom = L - bPrime;
   const ratio = Math.abs(denom) < 1e-6 ? 0 : (p - p0) / denom;

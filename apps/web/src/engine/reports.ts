@@ -13,7 +13,7 @@ const TEXTS: Record<CitizenReport['event'], string[]> = {
 
 /**
  * Verification of a crowd report against the engine's observations:
- *  lightning: CG/IC strikes within 8 km and +/-10 min
+ *  lightning: CG/IC strikes within 10 km and +/-15 min
  *  hail: a cell with a hail flag / VIL > 30 within 15 km
  *  damage: a cell with a downburst flag or >50 dBZ within 20 km
  *  waterlogging: >45 dBZ within 10 km in the last 30 min (proxy for >25 mm/h)
@@ -25,9 +25,9 @@ export function verifyReport(r: Omit<CitizenReport, 'status' | 'matchScore' | 'm
   let score = 0;
   let reason = '';
   if (r.event === 'lightning') {
-    const near = strikes.filter((s) => Math.abs(s.t - r.t) < 10 * 60000 && distanceKm(s.lng, s.lat, r.lng, r.lat) < 8);
+    const near = strikes.filter((s) => Math.abs(s.t - r.t) < 15 * 60000 && distanceKm(s.lng, s.lat, r.lng, r.lat) < 10);
     score = Math.min(1, near.length / 4);
-    reason = near.length ? `${near.length} strikes within 8 km / 10 min (nearest ${Math.min(...near.map((s) => distanceKm(s.lng, s.lat, r.lng, r.lat))).toFixed(1)} km)` : 'No strikes detected within 8 km in the last 10 min';
+    reason = near.length ? `${near.length} strikes within 10 km / 15 min (nearest ${Math.min(...near.map((s) => distanceKm(s.lng, s.lat, r.lng, r.lat))).toFixed(1)} km)` : 'No strikes detected within 10 km in ±15 min';
   } else {
     const radius = r.event === 'hail' ? 15 : r.event === 'damage' ? 20 : 10;
     const near = cells.filter((c) => distanceKm(c.lng, c.lat, r.lng, r.lat) < radius + c.radiusKm);

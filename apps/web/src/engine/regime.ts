@@ -35,5 +35,6 @@ export function classifyRegime(sc: Scenario, meanPw: number, meanShear: number, 
   drivers.push(`Month ${m}: ${['', 'winter', 'winter', 'pre-monsoon', 'pre-monsoon', 'pre-monsoon', 'monsoon', 'monsoon', 'monsoon', 'monsoon', 'post-monsoon', 'post-monsoon', 'winter'][m]}`);
   drivers.push(`Mean PW ${meanPw.toFixed(0)} mm, 0-6 km shear ${meanShear.toFixed(0)} m/s`);
   drivers.push(`Mean CAPE ${Math.round(meanCape)} J/kg, steering to ${Math.round(sc.steeringDeg)} deg`);
-  return { regime, label: REGIME_LABEL[regime], confidence: scores[regime], scores, drivers };
+  // never claim certainty: cap at 97%
+  return { regime, label: REGIME_LABEL[regime], confidence: Math.min(0.97, scores[regime]), scores, drivers };
 }

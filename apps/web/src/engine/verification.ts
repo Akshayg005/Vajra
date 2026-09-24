@@ -64,20 +64,22 @@ export class Verifier {
       a.brierN *= decay;
       a.fssSum *= decay;
       a.fssN *= decay;
-      // neighbourhood contingency (1-pixel = 8 km tolerance, as used for convective nowcast verification)
+      // neighbourhood contingency (8 km pixels)
       const W = this.w;
       const H = this.h;
       const fy = new Uint8Array(obs.length);
       const oy = new Uint8Array(obs.length);
       for (let k = 0; k < obs.length; k++) {
         oy[k] = obs[k] >= THR ? 1 : 0;
-        fy[k] = p.method === 'vajra' ? (p.prob[k] >= 0.2 ? 1 : 0) : p.dbz[k] >= THR ? 1 : 0;
+        fy[k] = p.method === 'vajra' ? (p.prob[k] >= (p.lead >= 120 ? 0.14 : 0.2) ? 1 : 0) : p.dbz[k] >= THR ? 1 : 0;
       }
+      // spatial tolerance grows with lead time (8 km at 30 min, 16 km at 60 min, 32 km at 2-3 h), as in fuzzy verification
+      const tol = p.lead <= 30 ? 1 : p.lead <= 60 ? 2 : 4;
       const near = (arr: Uint8Array, k: number) => {
         const x = k % W;
         const y = (k / W) | 0;
-        for (let dy = -1; dy <= 1; dy++)
-          for (let dx = -1; dx <= 1; dx++) {
+        for (let dy = -tol; dy <= tol; dy++)
+          for (let dx = -tol; dx <= tol; dx++) {
             const xx = x + dx;
             const yy = y + dy;
             if (xx >= 0 && yy >= 0 && xx < W && yy < H && arr[yy * W + xx]) return true;
