@@ -145,7 +145,7 @@ export class World {
     this.sensors = makeSensors(this.rng.fork(7), this.sc.center, this.sc.bbox);
     // "now" is the scenario start hour on a fixed date in the scenario month (IST)
     const now = Date.UTC(2026, this.sc.month - 1, 14, 0, 0, 0) + (this.sc.startHourIST - 5.5) * 3600e3;
-    const SPIN = 210; // minutes of history spun up before "now"
+    const SPIN = 240; // minutes of history spun up before "now"
     this.t = now - SPIN * 60000;
     this.lastNowcastAt = this.lastSensorAt = this.lastCttAt = this.lastVerIssueAt = this.lastConfAt = this.lastNwpAt = this.lastHistAt = -Infinity;
     this.scheduled = this.sc.cells.map((c) => ({ at: now + (c.delayMin - 30) * 60000, lng: c.lng, lat: c.lat, type: c.type, strength: c.strength }));
@@ -393,18 +393,21 @@ export class World {
     }
   }
 
-  /** growth/decay term for the nowcast: dBZ change expected from each cell's lifecycle trend (model estimate, imperfect). */
+  /**
+   * Growth/decay term: the model's learned lifecycle (from CTT cooling, flash-rate trend, VIL trend and stage)
+   * gives the expected dBZ change at each cell's forecast position. It is deliberately imperfect:
+   * 70% of the true lifecycle signal plus a per-cell bias, and it cannot see storms that have not formed.
+   */
   private growthTerm(lead: number, g: Grid, scale: number) {
     const fut = this.cells.map((c) => {
       const [lng, lat] = moveKm(c.lng, c.lat, c.headingDeg, (c.speedKmh * lead) / 60);
       const now = envelope(c, this.t).I;
-      // the model sees the trend, not the future: extrapolate the last 10 min, damped, saturating
-      const h = c.history;
-      const trend = h.length >= 6 ? (h[h.length - 1].maxDbz - h[h.length - 6].maxDbz) / 10 : 0;
-      let d = trend * lead * Math.exp(-lead / 50);
-      if (c.stage === 'mature') d -= (lead / 60) * (c.type === 'pulse' ? 7 : c.type === 'multicell' ? 3 : 1); // mature cells decay, organised ones slowly
+      const later = envelope(c, this.t + lead * 60000).I;
+      const skill = 0.5 + 0.3 * this.noise.n2(c.wander, 1.3); // model captures 20-80% of the true lifecycle signal
+      const bias = this.noise.n2(c.wander, 3.7) * 6;
+      let d = (later - now) * 47 * c.strength * skill + bias * Math.min(1, lead / 60);
       if (now < 0.1) d = 0;
-      return { lng, lat, r: c.radiusKm * 2.5 + lead * 0.15, d: clamp(d, -25, 12) };
+      return { lng, lat, r: c.radiusKm * 2.5 + lead * 0.15, d: clamp(d, -30, 14) };
     });
     return (i: number, j: number) => {
       const lng = g.lng(i * scale);
@@ -440,14 +443,14 @@ export class World {
       const r = Math.round(1 + lead / 30);
       const p = neighbourhoodProb(dbz, w, h, 35, r);
       // convective-initiation term: unstable, converging air can produce new storms at longer leads
-      const ciW = clamp((lead - 30) / 120, 0, 0.55) * clamp(Math.sin(((hr - 10) / 12) * Math.PI) + 0.2, 0, 1);
+      const ciW = clamp((lead - 30) / 120, 0, 0.42) * clamp(Math.sin(((hr - 10) / 12) * Math.PI) + 0.2, 0, 1);
       if (ciW > 0) {
         for (let j = 0; j < h; j += 1)
           for (let i = 0; i < w; i += 1) {
             const lng = g.lng(i);
             const lat = g.lat(j);
             const e = this.noise.n3(lng * 0.8, lat * 0.8, (this.t + lead * 60000) / (180 * 60000));
-            const ci = clamp((e - 0.3) * 1.6, 0, 1) * ciW;
+            const ci = clamp((e - 0.4) * 2, 0, 1) * ciW;
             const k = j * w + i;
             p[k] = Math.max(p[k], ci);
           }
@@ -629,7 +632,7 @@ export class World {
       nwp: this.nwpGrid.field('nwp', this.t, this.nwp.slice()),
       density: this.densityGrid.field('density', this.t, this.density.slice()),
       alerts: this.alerts.alerts.map((a) => ({ ...a, delivery: a.delivery.map((d) => ({ ...d })), areas: [...a.areas], polygon: a.polygon })),
-      sensors: this.sensors.map(({ injected: _i, injectedUntil: _u, base: _b, driftAcc: _d, healedAt: _h, ...s }) => ({ ...s, series: s.series.slice() })),
+      sensors: this.sensors.map(({ injected: _i, injectedUntil: _u, base: _b, driftAcc: _d, healedAt: _h, hits: _x, clean: _y, ...s }) => ({ ...s, series: s.series.slice() })),
       reports: this.reports.slice(),
       verification: this.verifier.summary(),
       regime: classifyRegime(this.sc, pwS / n, shS / n, cpS / n, istHour(this.t)),

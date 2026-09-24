@@ -86,7 +86,7 @@ export function maybeCrowdReport(rng: Rng, t: number, cells: CellAgent[], strike
     lng,
     lat,
     event,
-    text: rng.pick(TEXTS[event]),
+    text: TEXTS[event][(rid * 7 + Math.floor(Math.abs(lng) * 1000)) % TEXTS[event].length],
     place: km < 15 ? town.name : `${Math.round(km)} km from ${town.name}`,
     source: rng.pick(['app', 'whatsapp', 'sms'] as const),
   };

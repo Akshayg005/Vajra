@@ -40,6 +40,8 @@ export interface SensorAgent extends SensorStatus {
   base: number;
   driftAcc: number;
   healedAt: number;
+  hits?: number;
+  clean?: number;
 }
 
 export function makeSensors(rng: Rng, center: [number, number], bbox: [number, number, number, number]): SensorAgent[] {
@@ -117,19 +119,18 @@ export function stepSensors(sensors: SensorAgent[], t: number, rng: Rng, localTe
       if (s.series.length > 40) s.series.shift();
     }
     s.latencySec = s.latencySec * 0.7 + latency * 0.3;
-    // --- detectors ---
-    let detected: AnomalyType | null = null;
+    // --- detectors (consensus = neighbour/background estimate; persistence required to avoid flapping) ---
+    let raw: AnomalyType | null = null;
     const ser = s.series;
-    if (reading === null || s.latencySec > nominal(s) * 3) detected = 'dropout';
-    else if (ser.length >= 8 && ser.slice(-8).every((x) => x === ser[ser.length - 1])) detected = 'frozen';
-    else if (ser.length >= 10) {
-      const sorted = [...ser.slice(-15)].sort((a, b) => a - b);
-      const med = sorted[Math.floor(sorted.length / 2)];
-      const mad = [...sorted].map((x) => Math.abs(x - med)).sort((a, b) => a - b)[Math.floor(sorted.length / 2)] || 0.05;
-      if (Math.abs(ser[ser.length - 1] - med) > 4 * mad * 1.4826 && Math.abs(ser[ser.length - 1] - med) > 2) detected = 'spike';
-      else if (s.kind === 'aws' && Math.abs(ser[ser.length - 1] - truth) > 2.5) detected = 'drift';
-      else if (s.kind !== 'aws' && Math.abs(ser[ser.length - 1] - s.base) > 0.8) detected = 'drift';
-    }
+    const last = ser[ser.length - 1];
+    const consensus = truth;
+    if (reading === null || s.latencySec > nominal(s) * 3) raw = 'dropout';
+    else if (ser.length >= 8 && ser.slice(-8).every((x) => x === last)) raw = 'frozen';
+    else if (Math.abs(last - consensus) > (s.kind === 'aws' ? 6 : 1.5)) raw = 'spike';
+    else if (Math.abs(last - consensus) > (s.kind === 'aws' ? 2.5 : 0.6)) raw = 'drift';
+    s.hits = raw ? (s.hits ?? 0) + 1 : 0;
+    s.clean = raw ? 0 : (s.clean ?? 0) + 1;
+    const detected: AnomalyType | null = raw && (s.hits >= 2 || raw === 'dropout' || raw === 'frozen') ? raw : null;
     const latScore = clamp(1.25 - s.latencySec / (nominal(s) * 3), 0, 1);
     const detScore = detected ? (detected === 'dropout' ? 0.1 : 0.3) : 1;
     const target = clamp(latScore * detScore * (0.95 + rng.normal(0, 0.01)), 0.02, 0.99);
@@ -140,7 +141,7 @@ export function stepSensors(sensors: SensorAgent[], t: number, rng: Rng, localTe
       s.anomaly = detected;
       s.anomalySince = s.anomalySince ?? t;
       s.state = s.trust < 0.45 ? 'excluded' : 'degraded';
-    } else if (s.state === 'excluded' || s.state === 'degraded') {
+    } else if ((s.state === 'excluded' || s.state === 'degraded') && (s.clean ?? 0) >= 3) {
       s.state = 'recovering';
       s.healedAt = t;
     } else if (s.state === 'recovering' && t - s.healedAt > 10 * 60000 && s.trust > 0.8) {

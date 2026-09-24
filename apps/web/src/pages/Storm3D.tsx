@@ -1,3 +1,197 @@
+import { useMemo, useRef, useState } from 'react';
+import { Canvas, useFrame } from '@react-three/fiber';
+import { OrbitControls, Html, Grid } from '@react-three/drei';
+import * as THREE from 'three';
+import type { StormCell } from '@vajra/contracts';
+import { useStore } from '../store';
+import { Rng } from '../engine/prng';
+import { DBZ } from '../lib/colormap';
+import { SeverityBadge } from '../components/SeverityBadge';
+import { fx } from '../lib/format';
+
+const Z_SCALE = 0.55; // vertical exaggeration: 1 km height -> 0.55 units (horizontal 1 km = 0.1 units * 3)
+
+function dbzColor(v: number) {
+  const k = Math.max(0, Math.min(255, Math.round((v / 75) * 255)));
+  return new THREE.Color(DBZ.lut[k * 4] / 255, DBZ.lut[k * 4 + 1] / 255, DBZ.lut[k * 4 + 2] / 255);
+}
+
+/** Reflectivity volume as a point cloud: dBZ falls off with radius and with height above the core. */
+function Volume({ c }: { c: StormCell }) {
+  const { positions, colors } = useMemo(() => {
+    const rng = new Rng(c.id.charCodeAt(0) * 131 + c.id.charCodeAt(1));
+    const N = 9000;
+    const pos: number[] = [];
+    const col: number[] = [];
+    const R = c.radiusKm * 0.3;
+    const top = c.echoTopKm;
+    for (let i = 0; i < N; i++) {
+      const h = rng.f() * top; // km
+      const coreH = top * 0.4;
+      // storm widens aloft (anvil) and tilts downshear
+      const widen = 1 + Math.max(0, (h - top * 0.65) / (top * 0.35)) * 2.2;
+      const r = Math.sqrt(rng.f()) * R * widen * 1.6;
+      const th = rng.f() * Math.PI * 2;
+      const tilt = (h / top) * R * 0.8;
+      const x = Math.cos(th) * r + tilt;
+      const z = Math.sin(th) * r * (1 / Math.sqrt(c.elongation));
+      const radial = r / (R * widen * 1.6);
+      const vert = Math.abs(h - coreH) / top;
+      const dbz = c.maxDbz - 30 * radial * radial - 28 * vert * vert - (h > top * 0.7 ? 12 : 0);
+      if (dbz < 15) continue;
+      pos.push(x, h * Z_SCALE, z);
+      const cc = dbzColor(dbz);
+      col.push(cc.r, cc.g, cc.b);
+    }
+    return { positions: new Float32Array(pos), colors: new Float32Array(col) };
+  }, [c.id, Math.round(c.maxDbz), Math.round(c.echoTopKm * 2)]);
+  return (
+    <points>
+      <bufferGeometry>
+        <bufferAttribute attach="attributes-position" args={[positions, 3]} />
+        <bufferAttribute attach="attributes-color" args={[colors, 3]} />
+      </bufferGeometry>
+      <pointsMaterial size={0.09} vertexColors transparent opacity={0.55} depthWrite={false} blending={THREE.AdditiveBlending} />
+    </points>
+  );
+}
+
+function ChargeRegion({ y, r, color, label }: { y: number; r: number; color: string; label: string }) {
+  return (
+    <group position={[0, y, 0]}>
+      <mesh>
+        <sphereGeometry args={[r, 24, 12]} />
+        <meshBasicMaterial color={color} transparent opacity={0.13} depthWrite={false} />
+      </mesh>
+      <Html center distanceFactor={14}>
+        <div className="whitespace-nowrap rounded bg-black/60 px-1.5 py-0.5 font-mono text-[10px] text-white">{label}</div>
+      </Html>
+    </group>
+  );
+}
+
+/** Jagged lightning channels; new bolts at the cell's live flash rate. */
+function Bolts({ c }: { c: StormCell }) {
+  const group = useRef<THREE.Group>(null);
+  const rng = useMemo(() => new Rng(7), []);
+  const bolts = useRef<{ line: THREE.Line; born: number }[]>([]);
+  useFrame((st) => {
+    const t = st.clock.elapsedTime;
+    const g = group.current;
+    if (!g) return;
+    const perSec = Math.min(12, c.flashRate / 6); // compressed so the scene stays readable
+    if (rng.f() < perSec / 60) {
+      const cg = rng.f() < 0.25;
+      const top = c.echoTopKm * Z_SCALE * (cg ? 0.55 : 0.75);
+      const pts: THREE.Vector3[] = [];
+      let x = rng.range(-0.6, 0.6);
+      let z = rng.range(-0.6, 0.6);
+      const y0 = top;
+      const y1 = cg ? 0 : top * 0.45;
+      const steps = 14;
+      for (let i = 0; i <= steps; i++) {
+        const y = y0 + ((y1 - y0) * i) / steps;
+        x += rng.normal(0, cg ? 0.12 : 0.25);
+        z += rng.normal(0, cg ? 0.12 : 0.25);
+        pts.push(new THREE.Vector3(x, y, z));
+      }
+      const geo = new THREE.BufferGeometry().setFromPoints(pts);
+      const mat = new THREE.LineBasicMaterial({ color: cg ? '#e0faff' : '#c4b5fd', transparent: true, opacity: 1 });
+      const line = new THREE.Line(geo, mat);
+      g.add(line);
+      bolts.current.push({ line, born: t });
+    }
+    bolts.current = bolts.current.filter((b) => {
+      const age = t - b.born;
+      (b.line.material as THREE.LineBasicMaterial).opacity = Math.max(0, 1 - age / 0.35) * (Math.sin(age * 90) > -0.3 ? 1 : 0.3);
+      if (age > 0.4) {
+        g.remove(b.line);
+        b.line.geometry.dispose();
+        (b.line.material as THREE.Material).dispose();
+        return false;
+      }
+      return true;
+    });
+  });
+  return <group ref={group} />;
+}
+
+function Scene({ c }: { c: StormCell }) {
+  const top = c.echoTopKm * Z_SCALE;
+  const tropo = 16 * Z_SCALE;
+  const overshoot = c.echoTopKm > 14.5;
+  return (
+    <>
+      <ambientLight intensity={0.6} />
+      <Grid args={[30, 30]} cellColor="#1e293b" sectionColor="#334155" fadeDistance={40} position={[0, 0, 0]} infiniteGrid />
+      <Volume c={c} />
+      {/* echo top plane */}
+      <mesh position={[0, top, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[c.radiusKm * 0.3, c.radiusKm * 0.3 + 0.05, 64]} />
+        <meshBasicMaterial color="#22d3ee" />
+      </mesh>
+      <Html position={[c.radiusKm * 0.3 + 0.3, top, 0]} distanceFactor={14}>
+        <div className="whitespace-nowrap font-mono text-[11px] text-volt">echo top {fx(c.echoTopKm)} km</div>
+      </Html>
+      {/* tropopause */}
+      <mesh position={[0, tropo, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[14, 14]} />
+        <meshBasicMaterial color="#a78bfa" transparent opacity={0.05} side={THREE.DoubleSide} />
+      </mesh>
+      <Html position={[-6.5, tropo, 0]} distanceFactor={14}>
+        <div className="whitespace-nowrap font-mono text-[10px] text-plasma-soft">tropopause ~16 km</div>
+      </Html>
+      {overshoot && (
+        <mesh position={[(c.echoTopKm / c.echoTopKm) * c.radiusKm * 0.3 * 0.8, tropo, 0]}>
+          <sphereGeometry args={[0.7, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2]} />
+          <meshBasicMaterial color="#f5f3ff" transparent opacity={0.35} />
+        </mesh>
+      )}
+      {/* tripole charge structure (upper +, main − at −10…−25 °C, lower +) */}
+      <ChargeRegion y={top * 0.78} r={1.3} color="#ef4444" label="+ upper charge" />
+      <ChargeRegion y={top * 0.5} r={1.1} color="#3b82f6" label="− main charge (−10…−25 °C)" />
+      <ChargeRegion y={top * 0.22} r={0.6} color="#ef4444" label="+ lower charge" />
+      <Bolts c={c} />
+      <OrbitControls enableDamping target={[0, top * 0.45, 0]} maxPolarAngle={Math.PI / 2.05} autoRotate autoRotateSpeed={0.5} />
+    </>
+  );
+}
+
 export default function Storm3D() {
-  return <div className="p-6 text-slate-400">Storm3D</div>;
+  const cells = useStore((s) => s.snap?.cells ?? []);
+  const selected = useStore((s) => s.selectedCellId);
+  const select = useStore((s) => s.select);
+  const [local, setLocal] = useState<string | null>(null);
+  const strongest = [...cells].sort((a, b) => b.maxDbz - a.maxDbz);
+  const c = cells.find((x) => x.id === (local ?? selected)) ?? strongest[0];
+  if (!c) return <div className="p-6 text-slate-400">No storm cells right now.</div>;
+  return (
+    <div className="relative h-full w-full">
+      <Canvas camera={{ position: [9, 6, 11], fov: 45 }} dpr={[1, 1.75]} gl={{ antialias: true }} style={{ background: 'radial-gradient(ellipse at 50% 30%, #0f172a, #03050a)' }}>
+        <Scene c={c} />
+      </Canvas>
+      <div className="panel absolute left-3 top-3 w-[300px] p-3">
+        <div className="mb-2 flex items-center justify-between">
+          <span className="font-mono text-lg font-bold text-white">{c.id}</span>
+          <SeverityBadge severity={c.severity} />
+        </div>
+        <div className="space-y-1">
+          <div className="kv"><span>Max reflectivity</span><span>{fx(c.maxDbz, 0)} dBZ</span></div>
+          <div className="kv"><span>Echo top</span><span>{fx(c.echoTopKm)} km</span></div>
+          <div className="kv"><span>Overshooting top</span><span>{c.echoTopKm > 14.5 ? 'YES' : 'no'}</span></div>
+          <div className="kv"><span>VIL</span><span>{fx(c.vil, 0)} kg/m²</span></div>
+          <div className="kv"><span>Flash rate</span><span>{fx(c.flashRate)} fl/min</span></div>
+          <div className="kv"><span>Cloud-top temp</span><span>{fx(c.cttK, 0)} K</span></div>
+        </div>
+        <select value={c.id} onChange={(e) => { setLocal(e.target.value); select(e.target.value); }} className="mt-3 w-full rounded-md border border-white/10 bg-ink-800 px-2 py-1 text-sm">
+          {strongest.map((x) => (
+            <option key={x.id} value={x.id}>
+              {x.id} · {Math.round(x.maxDbz)} dBZ · {x.type}
+            </option>
+          ))}
+        </select>
+        <div className="mt-2 text-[11px] text-slate-500">Vertical scale exaggerated ×5. Drag to orbit, scroll to zoom. Bolts follow the live flash rate (time-compressed).</div>
+      </div>
+    </div>
+  );
 }

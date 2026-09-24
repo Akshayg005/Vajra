@@ -230,10 +230,9 @@ export class AlertManager {
       { level: 'state', name: bp.state },
       ...(districts.length ? districts : [{ name: bp.district, state: bp.state }]).map((d) => ({ level: 'district' as const, name: d.name })),
       { level: 'block', name: bp.block },
-      { level: 'panchayat', name: bp.panchayat },
-      { level: 'panchayat', name: blockAndPanchayat(cen[0] + 0.07, cen[1] - 0.05).panchayat },
+      ...[...new Set([bp.panchayat, blockAndPanchayat(cen[0] + 0.07, cen[1] - 0.05).panchayat, blockAndPanchayat(cen[0] - 0.09, cen[1] + 0.04).panchayat])].slice(0, 2).map((name) => ({ level: 'panchayat' as const, name })),
     ];
-    const hazard: Alert['hazard'] = c.hail ? 'hail' : c.type === 'squall' || c.downburst ? 'squall' : p.heavyRain > 0.6 ? 'heavy_rain' : c.flashRate > 12 ? 'lightning' : 'thunderstorm';
+    const hazard: Alert['hazard'] = c.hail ? 'hail' : c.type === 'squall' || c.downburst ? 'squall' : c.flashRate > 8 ? 'lightning' : p.heavyRain > 0.75 && sc.pw > 55 ? 'heavy_rain' : 'thunderstorm';
     const impact = estimateImpact(id, poly, sc, t, rng);
     const base: Omit<Alert, 'bulletin'> = {
       id,
