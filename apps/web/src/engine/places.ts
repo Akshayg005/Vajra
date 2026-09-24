@@ -166,6 +166,12 @@ export function nearestDistrict(lng: number, lat: number) {
   return best;
 }
 
+/** true if the point is on Indian territory (within ~45 km of an SoI district inner point) */
+export function inIndia(lng: number, lat: number): boolean {
+  for (const d of DISTRICTS) if (Math.abs(d.lng - lng) < 0.42 && Math.abs(d.lat - lat) < 0.42) return true;
+  return false;
+}
+
 export function nearestTown(lng: number, lat: number) {
   let best = TOWNS[0];
   let bd = Infinity;

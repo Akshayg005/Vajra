@@ -2,7 +2,7 @@ import type { Alert, Channel, DeliveryCounter, ImpactEstimate, LngLat, Scenario,
 import type { CellAgent } from './cells';
 import type { Rng } from './prng';
 import { convexHull, distanceKm, ellipse, fmtIST, istHour, moveKm, pointInPolygon } from './geo';
-import { DISTRICTS, INFRA, TOWNS, blockAndPanchayat } from './places';
+import { DISTRICTS, INFRA, TOWNS, blockAndPanchayat, inIndia } from './places';
 import type { MultiTaskProbs } from '@vajra/contracts';
 
 const SEV_RANK: Record<Severity, number> = { green: 0, yellow: 1, orange: 2, red: 3 };
@@ -160,6 +160,9 @@ export class AlertManager {
       }
       const poly = warningPolygon(c);
       if (!a) {
+        // only warn for Indian territory (storm now or within 30 min)
+        const ahead = moveKm(c.lng, c.lat, c.headingDeg, (c.speedKmh * 30) / 60);
+        if (!inIndia(c.lng, c.lat) && !inIndia(ahead[0], ahead[1])) continue;
         // fatigue guard: merge into an overlapping alert
         const cen = centroid(poly);
         const host = this.alerts.find((x) => (x.status === 'active' || x.status === 'updated') && SEV_RANK[x.severity] >= SEV_RANK[sev] && pointInPolygon(cen[0], cen[1], x.polygon as [number, number][]));

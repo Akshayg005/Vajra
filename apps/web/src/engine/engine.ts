@@ -24,6 +24,7 @@ import { classifyRegime } from './regime';
 import { AlertManager, severityOf } from './alerts';
 import { type SensorAgent, injectFault, makeSensors, radarCoverage, stepSensors } from './sensors';
 import { maybeCrowdReport, nextReportId, resetReportIds, verifyReport } from './reports';
+import { inIndia } from './places';
 import { LEADS, Verifier } from './verification';
 import { clamp, distanceKm, istHour, moveKm } from './geo';
 
@@ -201,6 +202,7 @@ export class World {
         const lat = this.rng.range(s + 0.3, n - 0.3);
         const env = this.envAt(lng, lat);
         const near = this.cells.some((c) => distanceKm(c.lng, c.lat, lng, lat) < 30);
+        if (!inIndia(lng, lat)) continue;
         const score = env.capeJkg / 600 + env.convergence / 3 - (near ? 5 : 0);
         if (score > bs) {
           bs = score;
@@ -580,7 +582,7 @@ export class World {
     };
   }
 
-  snapshot(): WorldSnapshot & { changed: typeof this.dirty } {
+  snapshot(): WorldSnapshot & { changed: World["dirty"] } {
     const g = this.grid;
     const strikesRecent = this.strikes.filter((s) => s.t >= this.t - 20 * 60000);
     const lastMin = strikesRecent.filter((s) => s.t >= this.t - 60000).length;

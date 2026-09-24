@@ -1,0 +1,102 @@
+@import 'maplibre-gl/dist/maplibre-gl.css';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+  --volt: #22d3ee;
+  --plasma: #a78bfa;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  background: #05070d;
+  overflow: hidden;
+}
+
+body {
+  font-feature-settings: 'tnum' 1, 'cv11' 1;
+  -webkit-font-smoothing: antialiased;
+}
+
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+@layer components {
+  .panel {
+    @apply rounded-xl border border-white/[0.07] bg-ink-900/85 backdrop-blur-md shadow-[0_8px_30px_-12px_rgba(0,0,0,0.8)];
+  }
+  .panel-title {
+    @apply text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400;
+  }
+  .chip {
+    @apply inline-flex items-center gap-1 rounded-md border border-white/10 bg-white/[0.04] px-2 py-0.5 text-[11px] font-medium text-slate-300;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.05] px-3 py-1.5 text-sm font-medium text-slate-200 transition hover:border-volt/50 hover:bg-volt/10 hover:text-white active:scale-[0.98] disabled:opacity-40;
+  }
+  .btn-primary {
+    @apply border-volt/40 bg-volt/15 text-volt-soft hover:bg-volt/25;
+  }
+  .kv {
+    @apply flex items-baseline justify-between gap-2 text-sm;
+  }
+  .kv > span:first-child {
+    @apply text-slate-400;
+  }
+  .kv > span:last-child {
+    @apply font-mono tnum text-slate-100;
+  }
+  .scroll-thin {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(148, 163, 184, 0.25) transparent;
+  }
+}
+
+.maplibregl-ctrl-attrib {
+  background: rgba(5, 7, 13, 0.6) !important;
+  color: #64748b !important;
+  font-size: 10px !important;
+}
+.maplibregl-ctrl-attrib a {
+  color: #94a3b8 !important;
+}
+.maplibregl-ctrl-group {
+  background: rgba(11, 17, 32, 0.9) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.maplibregl-ctrl-group button span {
+  filter: invert(0.85);
+}
+
+.grid-bg {
+  background-image: linear-gradient(rgba(34, 211, 238, 0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(34, 211, 238, 0.04) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+.hatch {
+  background-image: repeating-linear-gradient(45deg, rgba(167, 139, 250, 0.55) 0 2px, transparent 2px 7px);
+}
+
+@keyframes strikeFlash {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
