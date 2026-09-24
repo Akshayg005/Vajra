@@ -12,8 +12,8 @@ if (-not $NoApi) {
     Write-Host 'API venv not found - run .\scripts\setup.ps1 first. The web app still works offline on its local engine.' -ForegroundColor Yellow
   }
 }
-$url = 'http://localhost:5173/'
-if ($Seed -gt 0) { $url = "http://localhost:5173/?seed=$Seed" }
+$url = 'http://localhost:5173/#/welcome'
+if ($Seed -gt 0) { $url = "http://localhost:5173/?seed=$Seed#/welcome" }
 Write-Host "Starting web app on $url" -ForegroundColor Cyan
 Start-Process $url
 Set-Location $root
