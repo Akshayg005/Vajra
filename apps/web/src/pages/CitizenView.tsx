@@ -41,7 +41,13 @@ export default function CitizenView() {
     i18n.changeLanguage(lang);
   }, [lang]);
   useEffect(() => {
-    if (!home && towns.length) setHome(towns[0].name);
+    if (!home && towns.length) {
+      // open on the town most at risk: nearest to the strongest storm's 30-min position
+      const c = [...snap.cells].sort((a, b) => b.maxDbz - a.maxDbz)[0];
+      const f = c?.forecastTrack[2] ?? c;
+      const best = f ? [...towns].sort((a, b) => distanceKm(a.lng, a.lat, f.lng, f.lat) - distanceKm(b.lng, b.lat, f.lng, f.lat))[0] : towns[0];
+      setHome(best.name);
+    }
     if (!dest && towns.length > 1) setDest(towns[1].name);
   }, [towns]);
   useEffect(() => {

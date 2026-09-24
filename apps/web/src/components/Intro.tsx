@@ -67,7 +67,7 @@ function Earth({ onDone }: { onDone: () => void }) {
       </mesh>
       {spots.map((p, i) => (
         <mesh key={i} position={p} ref={(m) => { if (m) pulses.current[i] = m; }}>
-          <sphereGeometry args={[0.35, 16, 16]} />
+          <sphereGeometry args={[0.1, 16, 16]} />
           <meshBasicMaterial color="#22d3ee" transparent depthWrite={false} />
         </mesh>
       ))}

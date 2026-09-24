@@ -9,6 +9,19 @@ import { DBZ } from '../lib/colormap';
 import { SeverityBadge } from '../components/SeverityBadge';
 import { fx } from '../lib/format';
 
+const SPRITE = (() => {
+  const c = document.createElement('canvas');
+  c.width = c.height = 64;
+  const g = c.getContext('2d')!;
+  const grd = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+  grd.addColorStop(0, 'rgba(255,255,255,1)');
+  grd.addColorStop(0.4, 'rgba(255,255,255,0.45)');
+  grd.addColorStop(1, 'rgba(255,255,255,0)');
+  g.fillStyle = grd;
+  g.fillRect(0, 0, 64, 64);
+  return new THREE.CanvasTexture(c);
+})();
+
 const Z_SCALE = 0.55; // vertical exaggeration: 1 km height -> 0.55 units (horizontal 1 km = 0.1 units * 3)
 
 function dbzColor(v: number) {
@@ -20,7 +33,7 @@ function dbzColor(v: number) {
 function Volume({ c }: { c: StormCell }) {
   const { positions, colors } = useMemo(() => {
     const rng = new Rng(c.id.charCodeAt(0) * 131 + c.id.charCodeAt(1));
-    const N = 9000;
+    const N = 6000;
     const pos: number[] = [];
     const col: number[] = [];
     const R = c.radiusKm * 0.3;
@@ -51,7 +64,7 @@ function Volume({ c }: { c: StormCell }) {
         <bufferAttribute attach="attributes-position" args={[positions, 3]} />
         <bufferAttribute attach="attributes-color" args={[colors, 3]} />
       </bufferGeometry>
-      <pointsMaterial size={0.09} vertexColors transparent opacity={0.55} depthWrite={false} blending={THREE.AdditiveBlending} />
+      <pointsMaterial size={0.32} map={SPRITE} alphaTest={0.01} vertexColors transparent opacity={0.5} depthWrite={false} blending={THREE.AdditiveBlending} sizeAttenuation />
     </points>
   );
 }
