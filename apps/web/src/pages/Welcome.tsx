@@ -107,7 +107,7 @@ export default function Welcome() {
       </section>
 
       <section className="relative overflow-hidden bg-gradient-to-b from-ink-950 via-ink-900 to-ink-950 py-24">
-        <div className="pointer-events-none absolute inset-y-0 right-[8%] w-[22%] opacity-40">
+        <div className="pointer-events-none absolute inset-y-0 right-[6%] w-[26%] opacity-50 mix-blend-screen [mask-image:linear-gradient(to_bottom,transparent,black_20%,black_80%,transparent)]">
           <Lightning hue={38} speed={1.1} intensity={0.45} size={1.6} />
         </div>
         <div className="relative mx-auto max-w-6xl px-6">
@@ -182,12 +182,12 @@ export default function Welcome() {
       </section>
 
       <section className="relative overflow-hidden bg-ink-950 py-28">
-        <div className="pointer-events-none absolute inset-0 opacity-70">
+        <div className="pointer-events-none absolute inset-0 opacity-50 mix-blend-screen">
           <Lightning hue={36} speed={1.8} intensity={0.5} size={2.2} />
         </div>
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_20%,#04070d_75%)]" />
         <Reveal className="relative z-10 mx-auto max-w-3xl px-6 text-center">
-          <h3 className="text-4xl font-light md:text-6xl">Ready for the next Nor’wester?</h3>
+          <h3 className="text-4xl font-light drop-shadow-[0_2px_12px_rgba(0,0,0,0.9)] md:text-6xl">Ready for the next Nor’wester?</h3>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             <Link to="/" className="rounded-full bg-volt px-8 py-3 text-lg font-semibold text-ink-950 shadow-glow transition hover:scale-105">
               Enter Command Center

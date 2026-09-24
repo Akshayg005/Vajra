@@ -34,7 +34,10 @@ export default function CommandCenter() {
         <div className="flex max-h-full flex-col gap-3 pb-24">{detail ? <DetailDrawer /> : <CellList />}</div>
       </div>
       <div className="pointer-events-none absolute bottom-3 left-3 right-14 flex flex-col gap-2">
-        <ImpactStrip />
+        {/* clear the left column (layers + legend) on laptop widths */}
+        <div className="md:pl-[330px] min-[1800px]:pl-0">
+          <ImpactStrip />
+        </div>
         <TimeScrubber />
       </div>
     </div>

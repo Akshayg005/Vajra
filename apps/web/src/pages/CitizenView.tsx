@@ -29,6 +29,7 @@ import { distanceKm, moveKm } from '../engine/geo';
 import { fmtIST } from '../lib/format';
 import { useSimNow } from '../lib/useNow';
 import { RiskDial } from '../components/citizen/RiskDial';
+import { Lightning } from '../components/ui/lightning';
 import { renderShareCard, shareOrDownload } from '../components/citizen/shareCard';
 import { Skeleton } from '../components/Skeleton';
 
@@ -191,6 +192,11 @@ export default function CitizenView() {
           style={{ borderColor: color + '80', background: `radial-gradient(120% 90% at 0% 0%, ${color}33, transparent 60%), #0b1120` }}
           aria-live="polite"
         >
+          {status === 'danger' && (
+            <div className="pointer-events-none absolute inset-y-0 right-[8%] w-1/3 opacity-60 mix-blend-screen" aria-hidden>
+              <Lightning hue={212} speed={1.6} intensity={0.55} size={1.6} />
+            </div>
+          )}
           {status === 'danger' && <div className="absolute right-4 top-4 h-3 w-3 animate-ping rounded-full bg-sev-red" />}
           <div className="flex items-center gap-2 text-sm font-semibold" style={{ color }}>
             {status === 'danger' ? <Siren className="h-5 w-5" /> : status === 'caution' ? <CloudLightning className="h-5 w-5" /> : <ShieldCheck className="h-5 w-5" />}

@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useMemo, useRef, useState } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Html, Grid } from '@react-three/drei';
 import * as THREE from 'three';
@@ -8,6 +8,17 @@ import { Z_SCALE, boltPath, isCgBolt, stormVolume } from '../engine/volume';
 import { DBZ } from '../lib/colormap';
 import { SeverityBadge } from '../components/SeverityBadge';
 import { fx } from '../lib/format';
+import { cn } from '@/lib/utils';
+
+const RealisticStorm = lazy(() => import('@/components/ui/realistic-storm'));
+
+/** Map the engine's life cycle + echo top onto the raymarched cloud's growth / anvil controls. */
+function cloudShape(c: StormCell) {
+  const byTop = Math.min(1, Math.max(0.25, (c.echoTopKm - 5) / 11));
+  const stageK = c.stage === 'initiation' ? 0.45 : c.stage === 'growth' ? 0.8 : c.stage === 'mature' ? 1 : 0.9;
+  const anvil = c.stage === 'initiation' ? 0.1 : c.stage === 'growth' ? 0.5 : c.stage === 'mature' ? 0.95 : 1.1;
+  return { growth: Math.min(1, byTop * stageK + 0.05), anvil };
+}
 
 const SPRITE = (() => {
   const c = document.createElement('canvas');
@@ -152,14 +163,35 @@ export default function Storm3D() {
   const selected = useStore((s) => s.selectedCellId);
   const select = useStore((s) => s.select);
   const [local, setLocal] = useState<string | null>(null);
+  const [view, setView] = useState<'cloud' | 'radar'>('cloud');
   const strongest = [...cells].sort((a, b) => b.maxDbz - a.maxDbz);
   const c = cells.find((x) => x.id === (local ?? selected)) ?? strongest[0];
   if (!c) return <div className="p-6 text-slate-400">No storm cells right now.</div>;
   return (
     <div className="relative h-full w-full">
-      <Canvas camera={{ position: [9, 6, 11], fov: 45 }} dpr={[1, 1.75]} gl={{ antialias: true }} style={{ background: 'radial-gradient(ellipse at 50% 30%, #0f172a, #03050a)' }}>
-        <Scene c={c} />
-      </Canvas>
+      {view === 'radar' ? (
+        <Canvas camera={{ position: [9, 6, 11], fov: 45 }} dpr={[1, 1.75]} gl={{ antialias: true }} style={{ background: 'radial-gradient(ellipse at 50% 30%, #0f172a, #03050a)' }}>
+          <Scene c={c} />
+        </Canvas>
+      ) : (
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_20%,#223350_0%,#0b1322_45%,#03050a_100%)]">
+          <Suspense fallback={<div className="grid h-full place-items-center text-sm text-slate-400">Loading cloud renderer…</div>}>
+            <RealisticStorm {...cloudShape(c)} flashRate={c.flashRate} interactive autoRotate />
+          </Suspense>
+        </div>
+      )}
+      <div className="absolute right-3 top-3 flex rounded-full border border-white/10 bg-ink-900/80 p-1 text-sm backdrop-blur" role="tablist" aria-label="3D view">
+        {(
+          [
+            ['cloud', 'Realistic cloud'],
+            ['radar', 'Radar volume'],
+          ] as const
+        ).map(([k, label]) => (
+          <button key={k} role="tab" aria-selected={view === k} onClick={() => setView(k)} className={cn('rounded-full px-3 py-1 transition', view === k ? 'bg-volt font-semibold text-ink-950' : 'text-slate-300 hover:text-white')}>
+            {label}
+          </button>
+        ))}
+      </div>
       <div className="panel absolute left-3 top-3 w-[300px] p-3">
         <div className="mb-2 flex items-center justify-between">
           <span className="font-mono text-lg font-bold text-white">{c.id}</span>
@@ -205,7 +237,11 @@ export default function Storm3D() {
             </option>
           ))}
         </select>
-        <div className="mt-2 text-[11px] text-slate-500">Vertical scale exaggerated ×5. Drag to orbit, scroll to zoom. Bolts follow the live flash rate (time-compressed).</div>
+        <div className="mt-2 text-[11px] text-slate-500">
+          {view === 'radar'
+            ? 'Vertical scale exaggerated ×5. Drag to orbit, scroll to zoom. Bolts follow the live flash rate (time-compressed).'
+            : `Raymarched cumulonimbus shaped by this cell's life cycle (${c.stage}) and echo top; in-cloud flashes and CG strokes follow its live flash rate.`}
+        </div>
       </div>
     </div>
   );

@@ -88,7 +88,7 @@ export function ParallaxStorm({ children, className, container }: { children?: R
         </div>
       ))}
       {/* lightning behind the mid cloud bank */}
-      <div className="pointer-events-none absolute inset-y-0 left-[38%] w-[28%] opacity-80" style={{ zIndex: 4 }}>
+      <div className="pointer-events-none absolute inset-y-0 left-[38%] w-[28%] opacity-80 mix-blend-screen" style={{ zIndex: 4 }}>
         <Lightning hue={212} speed={1.3} intensity={0.55} size={1.8} />
       </div>
       <div className="pointer-events-none absolute inset-0 animate-rain opacity-60" style={{ zIndex: 11, backgroundImage: `url("${RAIN}")`, backgroundSize: '1200px 600px' }} />

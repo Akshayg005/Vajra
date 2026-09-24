@@ -1,5 +1,5 @@
-import { useMemo, useRef } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
+import { useEffect, useMemo, useRef } from 'react';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import * as THREE from 'three';
 import { cn } from '@/lib/utils';
@@ -40,6 +40,12 @@ float fbm(vec3 p) {
   return v;
 }
 
+float fbm3(vec3 p) {
+  float v = 0.0; float a = 0.55;
+  for (int i = 0; i < 3; i++) { v += a * noise(p); p = p * 2.03 + vec3(1.7, 9.2, 3.1); a *= 0.5; }
+  return v + 0.07;
+}
+
 // signed "shape" of the storm: > 0 inside
 float shape(vec3 p) {
   float top = mix(0.35, 1.05, uGrowth);
@@ -74,6 +80,14 @@ float density(vec3 p) {
   return d;
 }
 
+// cheaper density for the shadow rays (3 octaves, no rain shaft)
+float densityLo(vec3 p) {
+  float s = shape(p);
+  if (s < -0.25) return 0.0;
+  float n = fbm3(p * 2.2 + vec3(0.0, -uTime * 0.05, uTime * 0.012));
+  return smoothstep(-0.05, 0.25, s + (n - 0.55) * 0.55);
+}
+
 vec2 boxHit(vec3 ro, vec3 rd, vec3 bmin, vec3 bmax) {
   vec3 t0 = (bmin - ro) / rd; vec3 t1 = (bmax - ro) / rd;
   vec3 tmin = min(t0, t1); vec3 tmax = max(t0, t1);
@@ -86,17 +100,17 @@ void main() {
   vec2 h = boxHit(ro, rd, vec3(-2.4, -1.9, -2.0), vec3(2.6, 1.6, 2.0));
   if (h.x > h.y) discard;
   float t = max(h.x, 0.0);
-  float stepLen = (h.y - t) / 72.0;
+  float stepLen = (h.y - t) / 64.0;
   vec3 col = vec3(0.0);
   float trans = 1.0;
-  for (int i = 0; i < 72; i++) {
+  for (int i = 0; i < 64; i++) {
     vec3 p = ro + rd * (t + stepLen * (float(i) + hash(vWorld * 91.0)));
     float d = density(p);
     if (d > 0.002) {
       // self-shadowing toward the sun (4 taps)
       float shadow = 0.0;
-      for (int j = 1; j <= 4; j++) shadow += density(p + uSunDir * 0.14 * float(j));
-      float sun = exp(-shadow * 1.6);
+      for (int j = 1; j <= 3; j++) shadow += densityLo(p + uSunDir * 0.18 * float(j));
+      float sun = exp(-shadow * 2.1);
       float heightShade = smoothstep(-0.9, 1.1, p.y);
       vec3 ambient = mix(vec3(0.05, 0.07, 0.11), vec3(0.28, 0.33, 0.42), heightShade);
       vec3 sunCol = vec3(1.0, 0.7, 0.4) * 1.05; // low afternoon sun: amber rim light
@@ -105,7 +119,7 @@ void main() {
       // lightning: blue-white light from inside the cloud
       float fl = uFlash * exp(-length(p - uFlashPos) * 2.3);
       lit += vec3(0.75, 0.85, 1.0) * fl * 5.0;
-      float a = d * stepLen * 11.0;
+      float a = d * stepLen * 12.4;
       col += trans * a * lit;
       trans *= exp(-a);
       if (trans < 0.02) break;
@@ -182,6 +196,17 @@ function StormVolume({ growth, anvil, flashRate }: { growth: number; anvil: numb
   );
 }
 
+/** Keep the raymarch at ~0.45 MP whatever the canvas size: the cloud is soft, so lower resolution is invisible but saves the GPU. */
+function AdaptiveResolution({ budget = 450_000 }: { budget?: number }) {
+  const size = useThree((s) => s.size);
+  const setDpr = useThree((s) => s.setDpr);
+  useEffect(() => {
+    const px = Math.max(1, size.width * size.height);
+    setDpr(Math.max(0.35, Math.min(1.25, Math.sqrt(budget / px))));
+  }, [size.width, size.height, budget, setDpr]);
+  return null;
+}
+
 export interface RealisticStormProps {
   /** 0..1 life-cycle maturity (tower height, anvil) */
   growth?: number;
@@ -197,7 +222,8 @@ export interface RealisticStormProps {
 export function RealisticStorm({ growth = 0.95, anvil = 0.9, flashRate = 24, interactive = false, autoRotate = true, className }: RealisticStormProps) {
   return (
     <div className={cn('relative h-full w-full', className)}>
-      <Canvas camera={{ position: [0.2, 0.15, 5.2], fov: 42 }} dpr={[0.75, 1.25]} gl={{ antialias: false, alpha: true, powerPreference: 'high-performance' }}>
+      <Canvas camera={{ position: [0.2, 0.15, 5.2], fov: 42 }} dpr={0.6} gl={{ antialias: false, alpha: true, powerPreference: 'high-performance' }}>
+        <AdaptiveResolution />
         <StormVolume growth={growth} anvil={anvil} flashRate={flashRate} />
         <OrbitControls enabled={interactive} enableZoom={interactive} enablePan={false} autoRotate={autoRotate} autoRotateSpeed={0.35} minPolarAngle={Math.PI / 3} maxPolarAngle={Math.PI / 1.9} />
       </Canvas>

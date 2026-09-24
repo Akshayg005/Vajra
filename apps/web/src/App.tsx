@@ -21,9 +21,14 @@ const Analytics = lazy(() => import('./pages/Analytics'));
 const Storm3D = lazy(() => import('./pages/Storm3D'));
 const Compare = lazy(() => import('./pages/Compare'));
 const Intro = lazy(() => import('./components/Intro'));
+const Lightning = lazy(() => import('./components/ui/lightning'));
 const Welcome = lazy(() => import('./pages/Welcome'));
 
-const page = (name: string, el: ReactNode) => <ErrorBoundary name={name}>{el}</ErrorBoundary>;
+const page = (name: string, el: ReactNode) => (
+  <ErrorBoundary name={name}>
+    <div className="route-in h-full w-full">{el}</div>
+  </ErrorBoundary>
+);
 
 export default function App() {
   const introDone = useStore((s) => s.introDone);
@@ -181,8 +186,13 @@ export default function App() {
 
 function Boot() {
   return (
-    <div className="grid h-full w-full place-items-center grid-bg">
-      <div className="flex w-[360px] flex-col items-center gap-3 text-slate-400">
+    <div className="relative grid h-full w-full place-items-center overflow-hidden grid-bg">
+      <div className="pointer-events-none absolute inset-y-0 left-1/2 w-[30vw] -translate-x-1/2 opacity-40 mix-blend-screen" aria-hidden>
+        <Suspense fallback={null}>
+          <Lightning hue={40} speed={0.9} intensity={0.5} size={1.6} />
+        </Suspense>
+      </div>
+      <div className="relative flex w-[360px] flex-col items-center gap-3 text-slate-400">
         <div className="h-10 w-10 animate-spin rounded-full border-2 border-volt/20 border-t-volt" />
         <div className="font-mono text-xs tracking-widest">SPINNING UP ENGINE · 4 H OF RADAR HISTORY</div>
         <div className="w-full space-y-2">

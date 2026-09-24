@@ -5,6 +5,8 @@ import { DENSITY, gridToImage, lutCss } from '../lib/colormap';
 import { drawGeo, useGeo } from '../lib/geoCanvas';
 import { AXIS, EChart } from '../components/EChart';
 import { SCENARIOS } from '../engine/scenarios';
+import { SqueezeCarousel, type SqueezeSlide } from '@/components/ui/carousel-squeeze';
+import { Reveal } from '@/components/ui/reveal';
 import { DISTRICTS } from '../engine/places';
 import { AnimatedNumber } from '../components/AnimatedNumber';
 
@@ -112,6 +114,19 @@ export default function Analytics() {
     return b.map((x, i) => [i === b.length - 1 ? `${x}+` : `${x}-${b[i + 1]}`, c[i]]);
   }, [cg]);
 
+  const replaySlides: SqueezeSlide[] = SCENARIOS.map((sc) => ({
+    id: sc.id,
+    title: sc.name,
+    description: sc.description,
+    image: `/shots/scn-${sc.id}.jpg`,
+    imageAlt: `Radar view of the ${sc.name} scenario`,
+    overlay: <span className="text-sm font-semibold text-white">{sc.region}</span>,
+    action: snap.scenario.id === sc.id ? 'Replay again at 20×' : 'Replay at 20×',
+    onAction: () => {
+      void send({ type: 'scenario', id: sc.id }).then(() => setSpeed(20));
+    },
+  }));
+
   return (
     <div className="scroll-thin h-full space-y-3 overflow-y-auto p-3">
       <div className="grid grid-cols-[1fr_380px] gap-3">
@@ -210,6 +225,12 @@ export default function Analytics() {
           <Kpi label="Lightning jumps now" v={snap.cells.filter((c) => c.lightningJump).length} />
         </div>
       </div>
+      <Reveal className="panel p-3">
+        <div className="panel-title mb-3 flex items-center gap-1.5">
+          <History className="h-3.5 w-3.5" /> Storm gallery · replay any preset at 20×
+        </div>
+        <SqueezeCarousel slides={replaySlides} label="Replay scenario presets" height={260} />
+      </Reveal>
     </div>
   );
 }

@@ -28,7 +28,7 @@ export function TopBar() {
         <div className="relative grid h-9 w-9 place-items-center rounded-lg bg-gradient-to-br from-volt/25 to-plasma/25 shadow-glow">
           <Zap className="h-5 w-5 text-volt" strokeWidth={2.5} />
         </div>
-        <div className="hidden leading-tight lg:block">
+        <div className="hidden leading-tight xl:block">
           <div className="text-[15px] font-bold tracking-[0.2em] text-white">VAJRA</div>
           <div className="text-[10px] uppercase tracking-[0.18em] text-slate-400">Thunderstorm & Lightning Nowcast</div>
         </div>
@@ -73,7 +73,7 @@ export function TopBar() {
             </div>
             <div className="hidden flex-col items-end xl:flex">
               <span className="text-[10px] uppercase tracking-wider text-slate-400">Sensors</span>
-              <span className={`flex items-center gap-1 text-sm font-medium ${degraded ? 'text-sev-orange' : 'text-sev-green'}`}>
+              <span className={`flex items-center gap-1 whitespace-nowrap text-sm font-medium ${degraded ? 'text-sev-orange' : 'text-sev-green'}`}>
                 <Activity className="h-3.5 w-3.5" />
                 {degraded ? `${degraded} degraded` : 'All OK'}
               </span>
@@ -132,7 +132,7 @@ function StatusChip() {
   const warn = source === 'api-lost' || source === 'worker-restarted';
   return (
     <span
-      className={`chip hidden md:inline-flex ${warn ? 'border-sev-orange/50 text-sev-orange' : ''}`}
+      className={`chip hidden whitespace-nowrap md:inline-flex ${warn ? 'border-sev-orange/50 text-sev-orange' : ''}`}
       title={`Data source: ${label}. API ${apiOnline ? 'online' : 'offline (optional)'}${llm ? ', LLM proxy on' : ''}. Seed ${seed}${locked ? ' (locked)' : ''}. Feed latency ${latency} ms, engine tick ${tickMs.toFixed(1)} ms.`}
     >
       {source === 'worker-restarted' ? (

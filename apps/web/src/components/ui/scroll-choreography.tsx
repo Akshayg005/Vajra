@@ -46,7 +46,7 @@ export function ScrollChoreography({ className, images, finale, container }: Scr
   const captions = useTransform(p, [0, 0.25, 0.6, 0.7], [1, 1, 1, 0]);
   const finaleOpacity = useTransform(p, [0.88, 0.97], [0, 1]);
 
-  const base = 'absolute left-1/2 top-1/2 w-[36vw] h-[24vh] overflow-hidden -translate-x-1/2 -translate-y-1/2 rounded-xl border border-white/10 bg-ink-800 shadow-storm will-change-transform';
+  const base = 'absolute inset-0 m-auto w-[36vw] h-[24vh] overflow-hidden rounded-xl border border-white/10 bg-ink-800 shadow-storm will-change-transform';
 
   const Panel = ({ img, x, y, z, fade }: { img: ChoreoImage; x: MotionValue<string>; y: MotionValue<string>; z: string; fade?: boolean }) => (
     <motion.div style={{ x, y, opacity: fade ? under : 1 }} className={cn(base, z)}>

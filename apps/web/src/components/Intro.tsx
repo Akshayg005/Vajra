@@ -4,6 +4,7 @@ import { Stars } from '@react-three/drei';
 import * as THREE from 'three';
 import { motion } from 'framer-motion';
 import { useStore } from '../store';
+import { Lightning } from './ui/lightning';
 
 const INDIA = { lat: 22.5, lng: 80 };
 
@@ -103,6 +104,11 @@ export default function Intro() {
       <Canvas camera={{ position: [0, 0, 5], fov: 40 }} dpr={[1, 1.75]}>
         <Earth onDone={() => setPhase('title')} />
       </Canvas>
+      {phase === 'title' && (
+        <motion.div className="pointer-events-none absolute inset-y-0 left-1/2 w-[40vw] -translate-x-1/2 mix-blend-screen" initial={{ opacity: 0 }} animate={{ opacity: [0, 1, 0.3, 0.9] }} transition={{ duration: 0.6 }}>
+          <Lightning hue={40} speed={1.6} intensity={0.8} size={1.8} />
+        </motion.div>
+      )}
       <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-end pb-24">
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6, duration: 1 }} className="text-center">
           <div className="bg-gradient-to-r from-volt via-white to-plasma bg-clip-text text-6xl font-black tracking-[0.35em] text-transparent">VAJRA</div>

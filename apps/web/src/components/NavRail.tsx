@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { BarChart3, Bell, Box, Columns2, Gauge, LayoutDashboard, MessageSquareText, Smartphone, Users, Cpu } from 'lucide-react';
+import { BarChart3, Bell, Box, Columns2, Gauge, LayoutDashboard, MessageSquareText, Smartphone, Users, Cpu, Zap } from 'lucide-react';
 import { useStore } from '../store';
 import { useLiveAlerts } from '../selectors';
 
@@ -20,6 +20,10 @@ export function NavRail() {
   const bad = useStore((s) => s.snap?.sensors.filter((x) => x.state === 'excluded' || x.anomaly === 'dropout').length ?? 0);
   return (
     <nav className="z-10 flex w-[76px] shrink-0 flex-col items-center gap-1 overflow-y-auto border-r border-white/[0.06] bg-ink-900/80 py-3" aria-label="Main">
+      <NavLink to="/welcome" className="mb-1 flex w-[64px] flex-col items-center gap-1 rounded-lg py-2 text-[10.5px] font-medium text-slate-400 hover:bg-volt/10 hover:text-volt" title="VAJRA home">
+        <Zap className="h-5 w-5 text-volt" />
+        Home
+      </NavLink>
       {ITEMS.map(({ to, label, Icon }) => (
         <NavLink
           key={to}

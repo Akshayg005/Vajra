@@ -9,6 +9,7 @@ import { AssistantOutSchema, ChatInputSchema } from '../data/schemas';
 import { getRecognizer, speak, type SpeechRecognitionLike } from '../lib/speech';
 import { ChartCard, MiniMap } from '../components/assistant/MessageCards';
 import { inferenceDelay, wait } from '../components/Skeleton';
+import { Lightning } from '../components/ui/lightning';
 
 interface Msg {
   id: number;
@@ -142,8 +143,11 @@ export default function Assistant() {
   return (
     <div className="grid h-full grid-cols-[1fr_340px] gap-3 overflow-hidden p-3">
       <div className="panel flex min-h-0 flex-col">
-        <div className="flex items-center justify-between border-b border-white/5 p-3">
-          <div className="flex items-center gap-2">
+        <div className="relative flex items-center justify-between overflow-hidden border-b border-white/5 p-3">
+          <div className="pointer-events-none absolute inset-y-0 left-6 w-40 opacity-50 mix-blend-screen" aria-hidden>
+            <Lightning hue={38} speed={1.2} intensity={0.45} size={1.4} />
+          </div>
+          <div className="relative flex items-center gap-2">
             <Bot className="h-5 w-5 text-volt" />
             <span className="font-semibold text-white">VAJRA Assistant</span>
             <span className="chip">grounded in live engine state{llmOnline ? ' · LLM phrasing on' : ''}</span>
