@@ -1,0 +1,21 @@
+services:
+  api:
+    build: ./apps/api
+    environment:
+      - VAJRA_CORS_ORIGINS=http://localhost:8080,http://localhost:5173
+      - VAJRA_SEED=${VAJRA_SEED:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+    volumes:
+      - vajra-data:/app/data
+    ports:
+      - "8000:8000"
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    depends_on:
+      - api
+    ports:
+      - "8080:8080"
+volumes:
+  vajra-data:
