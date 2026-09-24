@@ -88,7 +88,7 @@ export default function SensorHealth() {
                 </button>
               ))}
               <label className="ml-auto flex items-center gap-1.5 text-xs text-slate-400">
-                <input type="checkbox" className="accent-cyan-400" checked={nearOnly} onChange={(e) => setNearOnly(e.target.checked)} /> Only radars near the scenario
+                <input type="checkbox" className="accent-amber-400" checked={nearOnly} onChange={(e) => setNearOnly(e.target.checked)} /> Only radars near the scenario
               </label>
             </div>
             <table className="w-full text-[13px]">
@@ -136,7 +136,7 @@ export default function SensorHealth() {
                         </div>
                       </td>
                       <td className="pl-3">
-                        <Sparkline values={s.series.slice(-30)} width={90} height={20} color={s.state === 'ok' ? '#22d3ee' : '#fb923c'} />
+                        <Sparkline values={s.series.slice(-30)} width={90} height={20} color={s.state === 'ok' ? '#f5a524' : '#fb923c'} />
                       </td>
                     </tr>
                   );

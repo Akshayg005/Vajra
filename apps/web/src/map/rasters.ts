@@ -53,10 +53,11 @@ export function bmpLayers(id: string, b: Bmp, opacity: number, now: number, fade
 }
 
 const BAND_RGB: Record<string, [number, number, number]> = {
-  '0-30': [232, 121, 249],
-  '30-60': [167, 139, 250],
-  '60-120': [96, 165, 250],
-  '120-180': [34, 211, 238],
+  // sequential storm-blue ramp (lightest = soonest): colour-blind safe, never confused with IMD severity colours
+  '0-30': [230, 240, 255],
+  '30-60': [156, 201, 255],
+  '60-120': [90, 169, 255],
+  '120-180': [47, 111, 214],
 };
 
 /** Composite of the four lead-time bands: each pixel takes the earliest band with P >= 25 %. */

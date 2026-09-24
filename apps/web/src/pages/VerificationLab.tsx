@@ -6,8 +6,8 @@ import { AXIS, EChart } from '../components/EChart';
 import { AnimatedNumber } from '../components/AnimatedNumber';
 
 const METHOD: Record<VerificationScore['method'], { label: string; color: string }> = {
-  vajra: { label: 'VAJRA (AI nowcast)', color: '#22d3ee' },
-  optical_flow: { label: 'Optical-flow extrapolation', color: '#a78bfa' },
+  vajra: { label: 'VAJRA (AI nowcast)', color: '#f5a524' },
+  optical_flow: { label: 'Optical-flow extrapolation', color: '#5aa9ff' },
   persistence: { label: 'Persistence', color: '#64748b' },
 };
 const METRICS = ['csi', 'pod', 'far', 'ets', 'fss', 'brier'] as const;
@@ -63,14 +63,14 @@ export default function VerificationLab() {
           name: 'VAJRA 60 min',
           data: rel.map((r) => [+r.forecast.toFixed(3), +r.observed.toFixed(3), r.count]),
           symbolSize: (d: number[]) => 4 + Math.min(14, Math.log10(d[2] + 1) * 4),
-          lineStyle: { color: '#22d3ee', width: 2.5 },
-          itemStyle: { color: '#22d3ee' },
+          lineStyle: { color: '#f5a524', width: 2.5 },
+          itemStyle: { color: '#f5a524' },
         },
         {
           type: 'bar',
           data: rel.map((r) => [+r.forecast.toFixed(3), Math.min(1, Math.log10(r.count + 1) / 6)]),
           barWidth: 6,
-          itemStyle: { color: 'rgba(167,139,250,0.3)' },
+          itemStyle: { color: 'rgba(90,169,255,0.3)' },
           silent: true,
         },
       ],

@@ -44,7 +44,7 @@ export function ringLayers(sensors: SensorStatus[], tick: number, opacity: numbe
       data: rings,
       opacity,
       getPath: (s) => ellipse(s.lng, s.lat, s.rangeKm ?? 250, s.rangeKm ?? 250, 0, 72),
-      getColor: (s) => (s.state === 'excluded' || s.anomaly === 'dropout' ? [239, 68, 68, 220] : s.state === 'ok' ? [34, 211, 238, 90] : [251, 146, 60, 180]),
+      getColor: (s) => (s.state === 'excluded' || s.anomaly === 'dropout' ? [239, 68, 68, 220] : s.state === 'ok' ? [90, 169, 255, 90] : [251, 146, 60, 180]),
       getWidth: (s) => (s.state === 'excluded' ? 2.5 : 1.2),
       widthUnits: 'pixels',
       updateTriggers: { getColor: tick, getWidth: tick },
@@ -61,7 +61,7 @@ export function ringLayers(sensors: SensorStatus[], tick: number, opacity: numbe
       getLineColor: [5, 7, 13],
       getLineWidth: 1.5,
       lineWidthUnits: 'pixels',
-      getFillColor: (s) => (s.state === 'excluded' ? [239, 68, 68] : s.state === 'ok' ? [34, 211, 238] : [251, 146, 60]),
+      getFillColor: (s) => (s.state === 'excluded' ? [239, 68, 68] : s.state === 'ok' ? [90, 169, 255] : [251, 146, 60]),
       updateTriggers: { getFillColor: tick },
     }),
   ];
@@ -105,8 +105,8 @@ export function strikeLayers(
       getFillColor: (s) => {
         const age = (simNow - s.t) / 60000;
         const a = Math.max(20, 255 * (1 - age / 20));
-        if (s.kind === 'IC') return [167, 139, 250, a * 0.55];
-        return s.polarity > 0 ? [244, 114, 182, a] : [186, 250, 255, a];
+        if (s.kind === 'IC') return [90, 169, 255, a * 0.55];
+        return s.polarity > 0 ? [255, 200, 90, a] : [224, 238, 255, a];
       },
       updateTriggers: { getFillColor: strikeTick },
     }),
@@ -120,7 +120,7 @@ export function strikeLayers(
       stroked: true,
       filled: true,
       getFillColor: (s) => [255, 255, 255, 200 * (1 - (now - (seen.get(s.id) ?? now)) / 700)],
-      getLineColor: (s) => (s.polarity > 0 ? [244, 114, 182, 255] : [103, 232, 249, 255]),
+      getLineColor: (s) => (s.polarity > 0 ? [255, 200, 90, 255] : [169, 209, 255, 255]),
       getLineWidth: 1.5,
       lineWidthUnits: 'pixels',
       updateTriggers: { getRadius: now, getFillColor: now },
@@ -223,8 +223,8 @@ export function trackLayers(cells: StormCell[], selected: string | null, opacity
       data: cells.filter((c) => c.forecastTrack.length > 1 && c.maxDbz > 35),
       opacity,
       getPolygon: coneFor,
-      getFillColor: (c) => (c.id === selected ? [167, 139, 250, 70] : [167, 139, 250, 30]),
-      getLineColor: [196, 181, 253, 140],
+      getFillColor: (c) => (c.id === selected ? [90, 169, 255, 70] : [90, 169, 255, 30]),
+      getLineColor: [169, 209, 255, 140],
       getLineWidth: 1,
       lineWidthUnits: 'pixels',
       stroked: true,
@@ -265,8 +265,8 @@ export function cellLayers(
       radiusUnits: 'meters',
       stroked: true,
       filled: true,
-      getFillColor: (c) => (c.id === selected ? [34, 211, 238, 40] : [0, 0, 0, 1]),
-      getLineColor: (c) => (c.id === selected ? [34, 211, 238, 255] : ([...SEV_RGB[c.severity], 235] as RGBA)),
+      getFillColor: (c) => (c.id === selected ? [169, 209, 255, 40] : [0, 0, 0, 1]),
+      getLineColor: (c) => (c.id === selected ? [224, 238, 255, 255] : ([...SEV_RGB[c.severity], 235] as RGBA)),
       getLineWidth: (c) => (c.id === selected ? 2.5 + pulse * 2 : 2),
       lineWidthUnits: 'pixels',
       pickable,
@@ -300,7 +300,7 @@ export function cellLayers(
         radiusUnits: 'meters',
         stroked: true,
         filled: false,
-        getLineColor: [34, 211, 238, 255 * (1 - ((now / 1400) % 1))],
+        getLineColor: [224, 238, 255, 255 * (1 - ((now / 1400) % 1))],
         getLineWidth: 2,
         lineWidthUnits: 'pixels',
         updateTriggers: { getRadius: now, getLineColor: now },

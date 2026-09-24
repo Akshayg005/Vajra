@@ -112,7 +112,7 @@ function Other() {
         <KV k="Latency" v={s.latencySec < 120 ? `${s.latencySec.toFixed(1)} s` : `${(s.latencySec / 60).toFixed(1)} min`} help={HELP.latency} />
         <KV k="Uptime" v={`${s.uptimePct.toFixed(2)}%`} />
         <KV k="Trust" v={`${(s.trust * 100).toFixed(1)}%`} help={HELP.trust} />
-        <Sparkline values={s.series.slice(-30)} width={370} height={40} color={s.state === 'ok' ? '#22d3ee' : '#fb923c'} />
+        <Sparkline values={s.series.slice(-30)} width={370} height={40} color={s.state === 'ok' ? '#f5a524' : '#fb923c'} />
         <button className="btn w-full" onClick={() => nav('/sensors')}>
           Open Sensor Health
         </button>

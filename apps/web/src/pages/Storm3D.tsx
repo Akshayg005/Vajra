@@ -87,7 +87,7 @@ function Bolts({ c }: { c: StormCell }) {
       const k = ++seq.current;
       const cg = isCgBolt(k);
       const geo = new THREE.BufferGeometry().setFromPoints(boltPath(k, c.echoTopKm, cg).map(([x, y, z]) => new THREE.Vector3(x, y, z)));
-      const line = new THREE.Line(geo, new THREE.LineBasicMaterial({ color: cg ? '#e0faff' : '#c4b5fd', transparent: true, opacity: 1 }));
+      const line = new THREE.Line(geo, new THREE.LineBasicMaterial({ color: cg ? '#e0faff' : '#a9d1ff', transparent: true, opacity: 1 }));
       g.add(line);
       bolts.current.push({ line, born: t });
     }
@@ -118,7 +118,7 @@ function Scene({ c }: { c: StormCell }) {
       {/* echo top plane */}
       <mesh position={[0, top, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <ringGeometry args={[c.radiusKm * 0.3, c.radiusKm * 0.3 + 0.05, 64]} />
-        <meshBasicMaterial color="#22d3ee" />
+        <meshBasicMaterial color="#f5a524" />
       </mesh>
       <Html position={[c.radiusKm * 0.3 + 0.3, top, 0]} distanceFactor={14}>
         <div className="whitespace-nowrap font-mono text-[11px] text-volt">echo top {fx(c.echoTopKm)} km</div>
@@ -126,7 +126,7 @@ function Scene({ c }: { c: StormCell }) {
       {/* tropopause */}
       <mesh position={[0, tropo, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[14, 14]} />
-        <meshBasicMaterial color="#a78bfa" transparent opacity={0.05} side={THREE.DoubleSide} />
+        <meshBasicMaterial color="#5aa9ff" transparent opacity={0.05} side={THREE.DoubleSide} />
       </mesh>
       <Html position={[-6.5, tropo, 0]} distanceFactor={14}>
         <div className="whitespace-nowrap font-mono text-[10px] text-plasma-soft">tropopause ~16 km</div>

@@ -43,7 +43,7 @@ export function EventFeed({ limit = 9 }: { limit?: number }) {
                 onClick={() => e.cellId && select(e.cellId)}
                 className="flex w-full items-start gap-2 rounded-md px-1 py-0.5 text-left hover:bg-white/5"
               >
-                <I className="mt-0.5 h-3.5 w-3.5 shrink-0" style={{ color: e.severity ? SEV_HEX[e.severity] : e.kind === 'jump' ? '#22d3ee' : '#94a3b8' }} />
+                <I className="mt-0.5 h-3.5 w-3.5 shrink-0" style={{ color: e.severity ? SEV_HEX[e.severity] : e.kind === 'jump' ? '#f5a524' : '#94a3b8' }} />
                 <span className="flex-1 text-[11.5px] leading-snug text-slate-300">{e.text}</span>
                 <span className="whitespace-nowrap font-mono text-[10px] text-slate-500">{ago(e.t, now)}</span>
               </motion.button>

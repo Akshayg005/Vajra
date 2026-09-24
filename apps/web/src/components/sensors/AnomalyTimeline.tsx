@@ -12,7 +12,7 @@ export function AnomalyTimeline({ events, now }: { events: EngineEvent[]; now: n
     const kind = e.kind === 'director' ? 'injected' : e.text.includes('auto-excluded') ? 'fault' : e.text.includes('probation') ? 'recovering' : 'healed';
     rows.set(name, [...(rows.get(name) ?? []), { t: e.t, kind, text: e.text }]);
   }
-  const color = { fault: '#ef4444', recovering: '#22d3ee', healed: '#22c55e', injected: '#a78bfa' } as const;
+  const color = { fault: '#ef4444', recovering: '#f5a524', healed: '#22c55e', injected: '#5aa9ff' } as const;
   if (!rows.size)
     return (
       <div className="text-xs text-slate-400">

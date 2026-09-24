@@ -5,8 +5,14 @@
 
 :root {
   color-scheme: dark;
-  --volt: #22d3ee;
-  --plasma: #a78bfa;
+  --volt: #f5a524;
+  --plasma: #5aa9ff;
+  --background: 220 50% 4%;
+  --foreground: 38 30% 94%;
+  --muted: 218 35% 14%;
+  --muted-foreground: 215 16% 66%;
+  --primary: 38 91% 55%;
+  --primary-foreground: 222 60% 6%;
 }
 
 html,
@@ -14,7 +20,7 @@ body,
 #root {
   height: 100%;
   margin: 0;
-  background: #05070d;
+  background: #04070d;
   overflow: hidden;
 }
 
@@ -77,12 +83,12 @@ body {
 }
 
 .grid-bg {
-  background-image: linear-gradient(rgba(34, 211, 238, 0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(34, 211, 238, 0.04) 1px, transparent 1px);
+  background-image: linear-gradient(rgba(245, 165, 36, 0.035) 1px, transparent 1px), linear-gradient(90deg, rgba(90, 169, 255, 0.035) 1px, transparent 1px);
   background-size: 40px 40px;
 }
 
 .hatch {
-  background-image: repeating-linear-gradient(45deg, rgba(167, 139, 250, 0.55) 0 2px, transparent 2px 7px);
+  background-image: repeating-linear-gradient(45deg, rgba(169, 209, 255, 0.6) 0 2px, transparent 2px 7px);
 }
 
 @keyframes strikeFlash {
@@ -171,6 +177,6 @@ html.projector .text-\[13px\] {
 }
 
 :focus-visible {
-  outline: 2px solid #22d3ee;
+  outline: 2px solid #f5a524;
   outline-offset: 2px;
 }

@@ -116,9 +116,9 @@ export function CellInspector() {
         </div>
         <div className="grid grid-cols-2 gap-2">
           <Metric label="Max reflectivity" help={HELP.dbz} value={c.maxDbz} unit="dBZ" d={1} series={h.map((x) => x.maxDbz)} color="#fb923c" />
-          <Metric label="Echo top" help={HELP.echoTop} value={c.echoTopKm} unit="km" d={1} series={h.map((x) => x.echoTopKm)} color="#a78bfa" />
+          <Metric label="Echo top" help={HELP.echoTop} value={c.echoTopKm} unit="km" d={1} series={h.map((x) => x.echoTopKm)} color="#5aa9ff" />
           <Metric label="VIL" help={HELP.vil} value={c.vil} unit="kg/m²" d={1} series={h.map((x) => x.vil)} color="#60a5fa" />
-          <Metric label="Flash rate" help={HELP.flashRate} value={c.flashRate} unit="fl/min" d={1} series={h.map((x) => x.flashRate)} color="#22d3ee" />
+          <Metric label="Flash rate" help={HELP.flashRate} value={c.flashRate} unit="fl/min" d={1} series={h.map((x) => x.flashRate)} color="#f5a524" />
           <Metric
             label="Cloud-top temp"
             help={HELP.ctt}
@@ -127,9 +127,9 @@ export function CellInspector() {
             d={1}
             sub={`${c.cttK.toFixed(1)} K`}
             series={h.map((x) => x.cttK - 273.15)}
-            color="#e879f9"
+            color="#ffe08a"
           />
-          <Metric label="Cloud-top cooling" help={HELP.cooling} value={c.cttCoolingK15} unit="K/15 min" d={1} series={[]} color="#e879f9" />
+          <Metric label="Cloud-top cooling" help={HELP.cooling} value={c.cttCoolingK15} unit="K/15 min" d={1} series={[]} color="#ffe08a" />
         </div>
         <div className="grid grid-cols-4 gap-2 rounded-lg bg-white/[0.03] p-2 text-center">
           {(

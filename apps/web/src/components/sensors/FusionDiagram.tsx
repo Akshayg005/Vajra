@@ -22,7 +22,7 @@ export function FusionDiagram({ sensors }: { sensors: SensorStatus[] }) {
         const cut = excluded > 0;
         return (
           <g key={s.kind}>
-            <rect x={6} y={y} width={170} height={32} rx={7} fill="#0f172a" stroke={cut ? '#ef4444' : degraded ? '#facc15' : '#22d3ee'} strokeOpacity={0.7} />
+            <rect x={6} y={y} width={170} height={32} rx={7} fill="#0f172a" stroke={cut ? '#ef4444' : degraded ? '#facc15' : '#f5a524'} strokeOpacity={0.7} />
             <text x={16} y={y + 14} fill="#e2e8f0" fontSize="11.5" fontFamily="Inter">
               {s.label}
             </text>
@@ -32,7 +32,7 @@ export function FusionDiagram({ sensors }: { sensors: SensorStatus[] }) {
             <path
               d={`M176 ${y + 16} C 230 ${y + 16}, 230 115, 280 115`}
               fill="none"
-              stroke={cut ? '#ef4444' : '#22d3ee'}
+              stroke={cut ? '#ef4444' : '#f5a524'}
               strokeWidth={cut ? 1.2 : 1.8}
               strokeDasharray={cut ? '4 4' : undefined}
               opacity={0.8}
@@ -45,24 +45,24 @@ export function FusionDiagram({ sensors }: { sensors: SensorStatus[] }) {
           </g>
         );
       })}
-      <rect x={280} y={92} width={120} height={46} rx={9} fill="#1e1b4b" stroke="#a78bfa" />
-      <text x={340} y={112} textAnchor="middle" fill="#ede9fe" fontSize="12" fontWeight="600" fontFamily="Inter">
+      <rect x={280} y={92} width={120} height={46} rx={9} fill="#0c1e3a" stroke="#5aa9ff" />
+      <text x={340} y={112} textAnchor="middle" fill="#e6f0ff" fontSize="12" fontWeight="600" fontFamily="Inter">
         QC + trust-weighted
       </text>
-      <text x={340} y={127} textAnchor="middle" fill="#c4b5fd" fontSize="11" fontFamily="Inter">
+      <text x={340} y={127} textAnchor="middle" fill="#a9d1ff" fontSize="11" fontFamily="Inter">
         data fusion
       </text>
-      <path d="M400 115 L 440 115" stroke="#a78bfa" strokeWidth={2} markerEnd="url(#arr)" />
+      <path d="M400 115 L 440 115" stroke="#5aa9ff" strokeWidth={2} markerEnd="url(#arr)" />
       <defs>
         <marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
-          <path d="M0,0 L8,4 L0,8 z" fill="#a78bfa" />
+          <path d="M0,0 L8,4 L0,8 z" fill="#5aa9ff" />
         </marker>
       </defs>
-      <rect x={446} y={92} width={108} height={46} rx={9} fill="#083344" stroke="#22d3ee" />
-      <text x={500} y={112} textAnchor="middle" fill="#cffafe" fontSize="12" fontWeight="600" fontFamily="Inter">
+      <rect x={446} y={92} width={108} height={46} rx={9} fill="#2a1a04" stroke="#f5a524" />
+      <text x={500} y={112} textAnchor="middle" fill="#fff1d6" fontSize="12" fontWeight="600" fontFamily="Inter">
         VAJRA nowcast
       </text>
-      <text x={500} y={127} textAnchor="middle" fill="#67e8f9" fontSize="11" fontFamily="Inter">
+      <text x={500} y={127} textAnchor="middle" fill="#ffc766" fontSize="11" fontFamily="Inter">
         0-3 h, 4 km
       </text>
     </svg>

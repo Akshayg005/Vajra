@@ -1,6 +1,7 @@
 import { defineConfig, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import http from 'node:http';
+import { fileURLToPath } from 'node:url';
 
 const API = process.env.VAJRA_API ?? 'http://localhost:8000';
 
@@ -43,6 +44,7 @@ function apiHealthFallback(): Plugin {
 
 export default defineConfig({
   plugins: [apiHealthFallback(), react()],
+  resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } },
   worker: { format: 'es' },
   server: {
     port: 5173,

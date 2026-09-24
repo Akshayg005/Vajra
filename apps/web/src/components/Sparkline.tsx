@@ -1,6 +1,6 @@
 export function Sparkline({
   values,
-  color = '#22d3ee',
+  color = '#f5a524',
   height = 28,
   width = 120,
   fill = true,

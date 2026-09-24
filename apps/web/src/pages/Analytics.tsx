@@ -183,8 +183,8 @@ export default function Analytics() {
               xAxis: { type: 'category', data: bins.map((b) => `${b.t}`), ...AXIS },
               yAxis: { type: 'value', ...AXIS },
               series: [
-                { name: 'CG', type: 'bar', stack: 's', data: bins.map((b) => b.cg), itemStyle: { color: '#67e8f9' } },
-                { name: 'IC', type: 'bar', stack: 's', data: bins.map((b) => b.ic), itemStyle: { color: '#7c3aed' } },
+                { name: 'CG', type: 'bar', stack: 's', data: bins.map((b) => b.cg), itemStyle: { color: '#ffc766' } },
+                { name: 'IC', type: 'bar', stack: 's', data: bins.map((b) => b.ic), itemStyle: { color: '#2563eb' } },
               ],
             }}
           />
@@ -197,7 +197,7 @@ export default function Analytics() {
               grid: { left: 36, right: 8, top: 10, bottom: 24 },
               xAxis: { type: 'category', data: hist.map((h) => h[0]), ...AXIS },
               yAxis: { type: 'value', ...AXIS },
-              series: [{ type: 'bar', data: hist.map((h) => h[1]), itemStyle: { color: '#a78bfa', borderRadius: [3, 3, 0, 0] } }],
+              series: [{ type: 'bar', data: hist.map((h) => h[1]), itemStyle: { color: '#5aa9ff', borderRadius: [3, 3, 0, 0] } }],
             }}
           />
         </div>

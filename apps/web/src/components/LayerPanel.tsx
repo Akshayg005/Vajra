@@ -24,10 +24,10 @@ const LAYERS: { k: LayerKey; label: string; hint: string }[] = [
 
 const BANDS: { k: BandKey; label: string; color?: string }[] = [
   { k: 'all', label: 'All' },
-  { k: '0-30', label: '0-30', color: '#e879f9' },
-  { k: '30-60', label: '30-60', color: '#a78bfa' },
-  { k: '60-120', label: '60-120', color: '#60a5fa' },
-  { k: '120-180', label: '120-180', color: '#22d3ee' },
+  { k: '0-30', label: '0-30', color: '#e6f0ff' },
+  { k: '30-60', label: '30-60', color: '#9cc9ff' },
+  { k: '60-120', label: '60-120', color: '#5aa9ff' },
+  { k: '120-180', label: '120-180', color: '#2f6fd6' },
 ];
 
 export function LayerPanel() {
@@ -52,7 +52,7 @@ export function LayerPanel() {
           {LAYERS.map((l) => (
             <div key={l.k}>
               <div className="flex items-center gap-2 rounded-md px-1.5 py-[3px] hover:bg-white/5">
-                <input id={`layer-${l.k}`} type="checkbox" className="accent-cyan-400" checked={layers[l.k]} onChange={() => toggle(l.k)} />
+                <input id={`layer-${l.k}`} type="checkbox" className="accent-amber-400" checked={layers[l.k]} onChange={() => toggle(l.k)} />
                 <label htmlFor={`layer-${l.k}`} title={l.hint} className="flex-1 cursor-pointer truncate text-[12.5px] text-slate-200">
                   {l.label}
                 </label>
@@ -74,7 +74,7 @@ export function LayerPanel() {
                     step={0.05}
                     value={opacity[l.k]}
                     onChange={(e) => setOpacity(l.k, Number(e.target.value))}
-                    className="flex-1 accent-cyan-400"
+                    className="flex-1 accent-amber-400"
                     aria-label={`${l.label} opacity`}
                   />
                   <span className="w-9 text-right font-mono text-[11px] text-slate-300">{Math.round(opacity[l.k] * 100)}%</span>
@@ -118,10 +118,10 @@ export function Legend() {
           <div className="mb-1 text-slate-300">Nowcast bands · P ≥ 25%</div>
           <div className="flex items-center gap-2">
             {[
-              ['#e879f9', '0-30'],
-              ['#a78bfa', '30-60'],
-              ['#60a5fa', '60-120'],
-              ['#22d3ee', '120-180'],
+              ['#e6f0ff', '0-30'],
+              ['#9cc9ff', '30-60'],
+              ['#5aa9ff', '60-120'],
+              ['#2f6fd6', '120-180'],
             ].map(([c, l]) => (
               <span key={l} className="flex items-center gap-1">
                 <span className="h-2.5 w-2.5 rounded-sm" style={{ background: c }} />
@@ -139,10 +139,10 @@ export function Legend() {
       {layers.lightning && (
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
           <span className="flex items-center gap-1">
-            <span className="h-2 w-2 rounded-full bg-[#bafaff]" /> −CG
+            <span className="h-2 w-2 rounded-full bg-[#e0eeff]" /> −CG
           </span>
           <span className="flex items-center gap-1">
-            <span className="h-2 w-2 rounded-full bg-[#f472b6]" /> +CG
+            <span className="h-2 w-2 rounded-full bg-[#ffc85a]" /> +CG
           </span>
           <span className="flex items-center gap-1">
             <span className="h-1.5 w-1.5 rounded-full bg-plasma/70" /> IC

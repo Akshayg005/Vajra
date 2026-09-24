@@ -33,7 +33,7 @@ export function TimeScrubber() {
       <div className="relative flex-1 px-1">
         <div className="relative h-7">
           <div className="absolute inset-x-0 top-3 h-1.5 rounded-full bg-gradient-to-r from-slate-600/60 via-slate-500/60 to-transparent" />
-          <div className="absolute top-3 h-1.5 rounded-full bg-gradient-to-r from-fuchsia-400/70 via-violet-400/60 to-cyan-400/50" style={{ left: '40%', right: 0 }} />
+          <div className="absolute top-3 h-1.5 rounded-full bg-gradient-to-r from-amber-300/80 via-orange-400/60 to-sky-500/50" style={{ left: '40%', right: 0 }} />
           <div className="absolute top-1 h-5 w-px bg-sev-red" style={{ left: '40%' }} />
           {[-120, -60, 0, 30, 60, 120, 180].map((m) => (
             <div key={m} className="absolute top-5 -translate-x-1/2 font-mono text-[9px] text-slate-500" style={{ left: `${((m + 120) / 300) * 100}%` }}>

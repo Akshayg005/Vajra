@@ -21,6 +21,7 @@ const Analytics = lazy(() => import('./pages/Analytics'));
 const Storm3D = lazy(() => import('./pages/Storm3D'));
 const Compare = lazy(() => import('./pages/Compare'));
 const Intro = lazy(() => import('./components/Intro'));
+const Welcome = lazy(() => import('./pages/Welcome'));
 
 const page = (name: string, el: ReactNode) => <ErrorBoundary name={name}>{el}</ErrorBoundary>;
 
@@ -30,6 +31,7 @@ export default function App() {
   const projector = useStore((s) => s.projector);
   const loc = useLocation();
   const citizen = loc.pathname.startsWith('/citizen') || loc.pathname.startsWith('/public');
+  const welcome = loc.pathname.startsWith('/welcome');
 
   useEffect(() => {
     let stopped = false;
@@ -108,6 +110,21 @@ export default function App() {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, []);
+
+  if (welcome)
+    return (
+      <Suspense fallback={<Boot />}>
+        {page('Welcome', <Welcome />)}
+        <DirectorPanel />
+        <AnimatePresence>
+          {!introDone && (
+            <Suspense fallback={null}>
+              <Intro key="intro" />
+            </Suspense>
+          )}
+        </AnimatePresence>
+      </Suspense>
+    );
 
   if (citizen)
     return (

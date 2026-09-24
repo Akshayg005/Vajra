@@ -75,7 +75,7 @@ function Earth({ onDone }: { onDone: () => void }) {
           }}
         >
           <sphereGeometry args={[0.1, 16, 16]} />
-          <meshBasicMaterial color="#22d3ee" transparent depthWrite={false} />
+          <meshBasicMaterial color="#f5a524" transparent depthWrite={false} />
         </mesh>
       ))}
       <Stars radius={60} depth={30} count={3500} factor={3} fade speed={0.6} />

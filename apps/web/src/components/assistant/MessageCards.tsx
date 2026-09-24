@@ -14,7 +14,7 @@ export function ChartCard({ name, points }: { name: string; points: [number, num
           xAxis: { type: 'value', min: 15, max: 180, ...AXIS },
           yAxis: { type: 'value', min: 0, max: 100, ...AXIS },
           series: [
-            { type: 'line', smooth: true, data: points, areaStyle: { color: 'rgba(34,211,238,0.15)' }, lineStyle: { color: '#22d3ee', width: 2 }, itemStyle: { color: '#22d3ee' } },
+            { type: 'line', smooth: true, data: points, areaStyle: { color: 'rgba(245,165,36,0.15)' }, lineStyle: { color: '#f5a524', width: 2 }, itemStyle: { color: '#f5a524' } },
           ],
         }}
       />
@@ -37,17 +37,17 @@ export function MiniMap({ snap, place, cellId }: { snap: WorldSnapshot; place: {
       </div>
       <svg width="100%" viewBox={`0 0 ${W} ${H}`} className="mt-1 rounded bg-[#0d1729]" role="img" aria-label={`Mini map around ${place.name}`}>
         {snap.strikes.slice(-300).map((st) => (
-          <circle key={st.id} cx={x(st.lng)} cy={y(st.lat)} r={0.9} fill={st.kind === 'CG' ? '#bafaff' : '#a78bfa'} opacity={0.6} />
+          <circle key={st.id} cx={x(st.lng)} cy={y(st.lat)} r={0.9} fill={st.kind === 'CG' ? '#e0eeff' : '#5aa9ff'} opacity={0.6} />
         ))}
         {snap.cells.map((q) => (
           <g key={q.id}>
             <circle cx={x(q.lng)} cy={y(q.lat)} r={Math.max(3, q.radiusKm / 3)} fill="none" stroke={SEV_HEX[q.severity]} strokeWidth={q.id === cellId ? 2 : 1} />
             {q.forecastTrack.length > 4 && (
-              <line x1={x(q.lng)} y1={y(q.lat)} x2={x(q.forecastTrack[4].lng)} y2={y(q.forecastTrack[4].lat)} stroke="#a78bfa" strokeWidth={1} strokeDasharray="2 2" />
+              <line x1={x(q.lng)} y1={y(q.lat)} x2={x(q.forecastTrack[4].lng)} y2={y(q.forecastTrack[4].lat)} stroke="#5aa9ff" strokeWidth={1} strokeDasharray="2 2" />
             )}
           </g>
         ))}
-        <circle cx={x(place.lng)} cy={y(place.lat)} r={4} fill="#22d3ee" stroke="#fff" strokeWidth={1.5} />
+        <circle cx={x(place.lng)} cy={y(place.lat)} r={4} fill="#f5a524" stroke="#fff" strokeWidth={1.5} />
       </svg>
     </div>
   );
