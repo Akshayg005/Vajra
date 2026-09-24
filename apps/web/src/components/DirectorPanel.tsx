@@ -44,7 +44,11 @@ export function DirectorPanel() {
           <Section title="Scenario">
             <div className="grid grid-cols-1 gap-1">
               {SCENARIOS.map((s) => (
-                <button key={s.id} onClick={() => void send({ type: 'scenario', id: s.id })} className={`rounded-md border px-2 py-1.5 text-left text-xs ${snap?.scenario.id === s.id ? 'border-plasma/60 bg-plasma/15 text-white' : 'border-white/10 text-slate-300 hover:bg-white/5'}`}>
+                <button
+                  key={s.id}
+                  onClick={() => void send({ type: 'scenario', id: s.id })}
+                  className={`rounded-md border px-2 py-1.5 text-left text-xs ${snap?.scenario.id === s.id ? 'border-plasma/60 bg-plasma/15 text-white' : 'border-white/10 text-slate-300 hover:bg-white/5'}`}
+                >
                   {s.name}
                 </button>
               ))}
@@ -53,7 +57,11 @@ export function DirectorPanel() {
           <Section title="Spawn a storm where you click">
             <div className="mb-2 grid grid-cols-4 gap-1">
               {(['pulse', 'multicell', 'squall', 'supercell'] as StormType[]).map((t) => (
-                <button key={t} onClick={() => setSpawnType(t)} className={`rounded-md border px-1 py-1 text-[11px] capitalize ${spawnType === t ? 'border-volt/60 bg-volt/15 text-white' : 'border-white/10 text-slate-400'}`}>
+                <button
+                  key={t}
+                  onClick={() => setSpawnType(t)}
+                  className={`rounded-md border px-1 py-1 text-[11px] capitalize ${spawnType === t ? 'border-volt/60 bg-volt/15 text-white' : 'border-white/10 text-slate-400'}`}
+                >
                   {t}
                 </button>
               ))}
@@ -71,7 +79,11 @@ export function DirectorPanel() {
           <Section title="Speed">
             <div className="grid grid-cols-4 gap-1">
               {[1, 5, 20, 60].map((v) => (
-                <button key={v} onClick={() => setSpeed(v)} className={`rounded-md border px-1 py-1 font-mono text-xs ${speed === v ? 'border-volt/60 bg-volt/15 text-white' : 'border-white/10 text-slate-400'}`}>
+                <button
+                  key={v}
+                  onClick={() => setSpeed(v)}
+                  className={`rounded-md border px-1 py-1 font-mono text-xs ${speed === v ? 'border-volt/60 bg-volt/15 text-white' : 'border-white/10 text-slate-400'}`}
+                >
                   {v}×
                 </button>
               ))}
@@ -79,7 +91,12 @@ export function DirectorPanel() {
           </Section>
           <Section title="Seed">
             <div className="flex gap-1">
-              <input value={seed} onChange={(e) => setSeed(e.target.value.replace(/\D/g, ''))} placeholder={String(useStore.getState().seed)} className="w-full rounded-md border border-white/10 bg-ink-800 px-2 py-1 font-mono text-xs outline-none focus:border-volt/60" />
+              <input
+                value={seed}
+                onChange={(e) => setSeed(e.target.value.replace(/\D/g, ''))}
+                placeholder={String(useStore.getState().seed)}
+                className="w-full rounded-md border border-white/10 bg-ink-800 px-2 py-1 font-mono text-xs outline-none focus:border-volt/60"
+              />
               <button className="btn px-2" title={lock ? 'Seed locked' : 'Seed unlocked'} onClick={() => setLock(!lock)}>
                 {lock ? <Lock className="h-3.5 w-3.5 text-volt" /> : <Unlock className="h-3.5 w-3.5" />}
               </button>
@@ -99,15 +116,21 @@ export function DirectorPanel() {
                   {s.name}
                 </option>
               ))}
-              {snap?.sensors.filter((s) => s.kind !== 'dwr').map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.name}
-                </option>
-              ))}
+              {snap?.sensors
+                .filter((s) => s.kind !== 'dwr')
+                .map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}
+                  </option>
+                ))}
             </select>
             <div className="mb-2 grid grid-cols-4 gap-1">
               {(['spike', 'frozen', 'drift', 'dropout'] as AnomalyType[]).map((a) => (
-                <button key={a} onClick={() => setAnomaly(a)} className={`rounded-md border px-1 py-1 text-[11px] ${anomaly === a ? 'border-sev-orange/60 bg-sev-orange/15 text-white' : 'border-white/10 text-slate-400'}`}>
+                <button
+                  key={a}
+                  onClick={() => setAnomaly(a)}
+                  className={`rounded-md border px-1 py-1 text-[11px] ${anomaly === a ? 'border-sev-orange/60 bg-sev-orange/15 text-white' : 'border-white/10 text-slate-400'}`}
+                >
                   {a}
                 </button>
               ))}

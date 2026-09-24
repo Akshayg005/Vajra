@@ -146,9 +146,37 @@ const stub = (f: Omit<FeedAdapter, 'status' | 'connect'>): FeedAdapter => ({
 });
 
 export const FEED_ADAPTERS: FeedAdapter[] = [
-  stub({ id: 'dwr', name: 'IMD Doppler Weather Radar', product: 'MAX(Z) / PPI volume, 39 sites', format: 'NetCDF / IRIS RAW via ODIM-H5', cadence: '10 min', mapsTo: 'GridField dbz, echo top, VIL' }),
-  stub({ id: 'insat', name: 'INSAT-3DR / 3DS (MOSDAC)', product: 'TIR1 10.8 µm brightness temperature, 4 km', format: 'HDF5', cadence: '15 min (rapid 4 min)', mapsTo: 'GridField ctt, cloud-top cooling' }),
-  stub({ id: 'lln', name: 'Lightning Location Network (IITM/IMD)', product: 'CG + IC strokes, polarity, peak current', format: 'JSON / binary stream (MQTT)', cadence: 'real-time (<10 s)', mapsTo: 'LightningStrike[]' }),
+  stub({
+    id: 'dwr',
+    name: 'IMD Doppler Weather Radar',
+    product: 'MAX(Z) / PPI volume, 39 sites',
+    format: 'NetCDF / IRIS RAW via ODIM-H5',
+    cadence: '10 min',
+    mapsTo: 'GridField dbz, echo top, VIL',
+  }),
+  stub({
+    id: 'insat',
+    name: 'INSAT-3DR / 3DS (MOSDAC)',
+    product: 'TIR1 10.8 µm brightness temperature, 4 km',
+    format: 'HDF5',
+    cadence: '15 min (rapid 4 min)',
+    mapsTo: 'GridField ctt, cloud-top cooling',
+  }),
+  stub({
+    id: 'lln',
+    name: 'Lightning Location Network (IITM/IMD)',
+    product: 'CG + IC strokes, polarity, peak current',
+    format: 'JSON / binary stream (MQTT)',
+    cadence: 'real-time (<10 s)',
+    mapsTo: 'LightningStrike[]',
+  }),
   stub({ id: 'nwp', name: 'NWP NCUM 12 km / WRF 3 km', product: 'CAPE, CIN, shear, PW, convergence', format: 'GRIB2', cadence: 'hourly', mapsTo: 'EnvProfile, GridField nwp' }),
-  stub({ id: 'aws', name: 'IMD AWS / ARG network', product: 'T, RH, wind, rain, pressure', format: 'CSV / JSON (WIS 2.0)', cadence: '15 min', mapsTo: 'SensorStatus, cold-pool detection' }),
+  stub({
+    id: 'aws',
+    name: 'IMD AWS / ARG network',
+    product: 'T, RH, wind, rain, pressure',
+    format: 'CSV / JSON (WIS 2.0)',
+    cadence: '15 min',
+    mapsTo: 'SensorStatus, cold-pool detection',
+  }),
 ];

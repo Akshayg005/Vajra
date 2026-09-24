@@ -1,6 +1,5 @@
 import type { PointNowcast, Severity, StormCell, WorldSnapshot } from '@vajra/contracts';
 import { DISTRICTS, TOWNS } from '../engine/places';
-import { distanceKm } from '../engine/geo';
 import { compass } from '../engine/alerts';
 
 export type Lang = 'en' | 'hi' | 'mr' | 'bn' | 'or' | 'ta' | 'te' | 'kn';
@@ -9,10 +8,54 @@ export type Hazard = 'lightning' | 'hail' | 'rain' | 'gust' | 'thunderstorm';
 
 /** Native-script aliases for places so questions in regional languages resolve. */
 const ALIASES: Record<string, string> = {
-  पटना: 'Patna', कोलकाता: 'Kolkata', कलकत्ता: 'Kolkata', मुंबई: 'Mumbai', मुंबईत: 'Mumbai', दिल्ली: 'New Delhi', 'नई दिल्ली': 'New Delhi', भुवनेश्वर: 'Bhubaneswar', नागपुर: 'Nagpur', नागपूर: 'Nagpur', रांची: 'Ranchi', गया: 'Gaya', पुणे: 'Pune', ठाणे: 'Thane', अकोला: 'Akola', अमरावती: 'Amravati', धनबाद: 'Dhanbad', जमशेदपुर: 'Jamshedpur', भागलपुर: 'Bhagalpur', मुजफ्फरपुर: 'Muzaffarpur', गुड़गांव: 'Gurugram', गुरुग्राम: 'Gurugram', नोएडा: 'Noida', कटक: 'Cuttack', पुरी: 'Puri',
-  কলকাতা: 'Kolkata', হাওড়া: 'Howrah', দুর্গাপুর: 'Durgapur', আসানসোল: 'Asansol', বর্ধমান: 'Bardhaman', খড়্গপুর: 'Kharagpur', হলদিয়া: 'Haldia', বাঁকুড়া: 'Bankura', পুরুলিয়া: 'Purulia',
-  ଭୁବନେଶ୍ୱର: 'Bhubaneswar', କଟକ: 'Cuttack', ପୁରୀ: 'Puri', ବାଲେଶ୍ୱର: 'Balasore', ପାରାଦୀପ: 'Paradip',
-  மும்பை: 'Mumbai', கொல்கத்தா: 'Kolkata', டெல்லி: 'New Delhi', పాట్నా: 'Patna', ముంబై: 'Mumbai', కోల్‌కతా: 'Kolkata', ನಾಗಪುರ: 'Nagpur', ಮುಂಬೈ: 'Mumbai', ಕೋಲ್ಕತ್ತಾ: 'Kolkata',
+  पटना: 'Patna',
+  कोलकाता: 'Kolkata',
+  कलकत्ता: 'Kolkata',
+  मुंबई: 'Mumbai',
+  मुंबईत: 'Mumbai',
+  दिल्ली: 'New Delhi',
+  'नई दिल्ली': 'New Delhi',
+  भुवनेश्वर: 'Bhubaneswar',
+  नागपुर: 'Nagpur',
+  नागपूर: 'Nagpur',
+  रांची: 'Ranchi',
+  गया: 'Gaya',
+  पुणे: 'Pune',
+  ठाणे: 'Thane',
+  अकोला: 'Akola',
+  अमरावती: 'Amravati',
+  धनबाद: 'Dhanbad',
+  जमशेदपुर: 'Jamshedpur',
+  भागलपुर: 'Bhagalpur',
+  मुजफ्फरपुर: 'Muzaffarpur',
+  गुड़गांव: 'Gurugram',
+  गुरुग्राम: 'Gurugram',
+  नोएडा: 'Noida',
+  कटक: 'Cuttack',
+  पुरी: 'Puri',
+  কলকাতা: 'Kolkata',
+  হাওড়া: 'Howrah',
+  দুর্গাপুর: 'Durgapur',
+  আসানসোল: 'Asansol',
+  বর্ধমান: 'Bardhaman',
+  খড়্গপুর: 'Kharagpur',
+  হলদিয়া: 'Haldia',
+  বাঁকুড়া: 'Bankura',
+  পুরুলিয়া: 'Purulia',
+  ଭୁବନେଶ୍ୱର: 'Bhubaneswar',
+  କଟକ: 'Cuttack',
+  ପୁରୀ: 'Puri',
+  ବାଲେଶ୍ୱର: 'Balasore',
+  ପାରାଦୀପ: 'Paradip',
+  மும்பை: 'Mumbai',
+  கொல்கத்தா: 'Kolkata',
+  டெல்லி: 'New Delhi',
+  పాట్నా: 'Patna',
+  ముంబై: 'Mumbai',
+  కోల్‌కతా: 'Kolkata',
+  ನಾಗಪುರ: 'Nagpur',
+  ಮುಂಬೈ: 'Mumbai',
+  ಕೋಲ್ಕತ್ತಾ: 'Kolkata',
 };
 
 export function detectLang(text: string, fallback: Lang): Lang {
@@ -119,7 +162,15 @@ const LVL: Record<Lang, Record<'low' | 'moderate' | 'high', string>> = {
 };
 
 export function hazardProb(pn: PointNowcast, h: Hazard) {
-  return h === 'lightning' ? Math.max(pn.probs.lightning * (pn.etaMin !== null ? 1 : 0.4), pn.probability * 0.9) : h === 'hail' ? pn.probs.hail * (pn.etaMin !== null ? 1 : 0.2) : h === 'rain' ? pn.probs.heavyRain * (pn.etaMin !== null ? 1 : 0.4) : h === 'gust' ? pn.probs.gust50 * (pn.etaMin !== null ? 1 : 0.3) : pn.probability;
+  return h === 'lightning'
+    ? Math.max(pn.probs.lightning * (pn.etaMin !== null ? 1 : 0.4), pn.probability * 0.9)
+    : h === 'hail'
+      ? pn.probs.hail * (pn.etaMin !== null ? 1 : 0.2)
+      : h === 'rain'
+        ? pn.probs.heavyRain * (pn.etaMin !== null ? 1 : 0.4)
+        : h === 'gust'
+          ? pn.probs.gust50 * (pn.etaMin !== null ? 1 : 0.3)
+          : pn.probability;
 }
 
 export function answerPoint(lang: Lang, place: string, lead: number, h: Hazard, p: number, pn: PointNowcast, cell?: StormCell): string {
@@ -147,7 +198,12 @@ export function answerPoint(lang: Lang, place: string, lead: number, h: Hazard, 
     default: {
       // several phrasings with live slots, picked deterministically so replies never repeat word for word
       const k = variant(`${place}|${lead}|${h}|${pct}|${eta ?? 'x'}`);
-      const verdict = level(p) === 'high' ? ['Yes, likely.', 'Very likely.', 'Expect it.'][k % 3] : level(p) === 'moderate' ? ['Possibly.', 'It could happen.', 'There is a fair chance.'][k % 3] : ['Unlikely.', 'Probably not.', 'Low chance.'][k % 3];
+      const verdict =
+        level(p) === 'high'
+          ? ['Yes, likely.', 'Very likely.', 'Expect it.'][k % 3]
+          : level(p) === 'moderate'
+            ? ['Possibly.', 'It could happen.', 'There is a fair chance.'][k % 3]
+            : ['Unlikely.', 'Probably not.', 'Low chance.'][k % 3];
       const core = [
         `The chance of ${hz} at ${place} in the next ${lead} min is ${L} (${p100(p)}%).`,
         `${place}: ${L.toLowerCase()} risk of ${hz} within ${lead} minutes (${p100(p)}%).`,
@@ -160,7 +216,8 @@ export function answerPoint(lang: Lang, place: string, lead: number, h: Hazard, 
               ` The nearest threat is storm ${cell.id}, ${cell.maxDbz.toFixed(1)} dBZ with ${cell.flashRate.toFixed(1)} fl/min, heading ${mv}; ETA ~${eta} min.`,
             ][(k >>> 4) % 2]
           : [' No tracked storm is on course for this place.', ' None of the tracked storms is heading your way.'][(k >>> 4) % 2];
-      const lt = strike !== null ? [` Nearest lightning in the last 15 min: ${strike.toFixed(1)} km.`, ` Closest strike (15 min): ${strike.toFixed(1)} km away.`][(k >>> 5) % 2] : '';
+      const lt =
+        strike !== null ? [` Nearest lightning in the last 15 min: ${strike.toFixed(1)} km.`, ` Closest strike (15 min): ${strike.toFixed(1)} km away.`][(k >>> 5) % 2] : '';
       return `${verdict} ${core}${storm}${lt}`;
     }
   }
@@ -173,6 +230,8 @@ export const ADVISORY: Record<Exclude<Sector, null>, (s: WorldSnapshot, sev: Sev
     const cells = s.cells.filter((c) => c.maxDbz > 45);
     return `Aviation advisory: ${cells.length} convective cells ≥45 dBZ in the region; highest echo top ${Math.max(0, ...cells.map((c) => c.echoTopKm)).toFixed(1)} km (FL${Math.round((Math.max(0, ...cells.map((c) => c.echoTopKm)) * 3281) / 100)}). Expect wind shear, gusts >50 km/h and hail within 20 km of these cells. Plan holding or diversion; avoid departures under cells with a lightning jump.`;
   },
-  marine: (s, sev) => `Marine advisory: ${sev === 'red' || sev === 'orange' ? 'Fishers should return to the nearest harbour now.' : 'Stay alert and keep radios on.'} Squalls of 50-70 km/h are possible near coastal storms; seas rough near cells. Do not venture out until warnings for ${s.scenario.region} are lifted.`,
-  urban: (s) => `Urban advisory: avoid underpasses and low roads as rain rates can exceed 50 mm/h under strong cores. Do not stand under hoardings or trees. ${s.alerts.filter((a) => a.status !== 'expired').length} warnings are live; check the commute planner in the citizen app.`,
+  marine: (s, sev) =>
+    `Marine advisory: ${sev === 'red' || sev === 'orange' ? 'Fishers should return to the nearest harbour now.' : 'Stay alert and keep radios on.'} Squalls of 50-70 km/h are possible near coastal storms; seas rough near cells. Do not venture out until warnings for ${s.scenario.region} are lifted.`,
+  urban: (s) =>
+    `Urban advisory: avoid underpasses and low roads as rain rates can exceed 50 mm/h under strong cores. Do not stand under hoardings or trees. ${s.alerts.filter((a) => a.status !== 'expired').length} warnings are live; check the commute planner in the citizen app.`,
 };

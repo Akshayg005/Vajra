@@ -78,7 +78,12 @@ export default function SensorHealth() {
           <div className="panel min-w-0 p-3">
             <div className="mb-2 flex flex-wrap items-center gap-1">
               {(['all', 'dwr', 'satellite', 'lightning', 'aws', 'nwp'] as const).map((k) => (
-                <button key={k} onClick={() => setKind(k)} aria-pressed={kind === k} className={`rounded-md px-2 py-0.5 text-xs ${kind === k ? 'bg-volt/20 text-volt' : 'text-slate-400 hover:bg-white/5'}`}>
+                <button
+                  key={k}
+                  onClick={() => setKind(k)}
+                  aria-pressed={kind === k}
+                  className={`rounded-md px-2 py-0.5 text-xs ${kind === k ? 'bg-volt/20 text-volt' : 'text-slate-400 hover:bg-white/5'}`}
+                >
                   {k === 'all' ? 'All' : KIND[k].label}
                 </button>
               ))}
@@ -92,9 +97,13 @@ export default function SensorHealth() {
                   <th className="py-1">Sensor</th>
                   <th>State</th>
                   <th>Anomaly</th>
-                  <th className="text-right" title={HELP.latency}>Latency</th>
+                  <th className="text-right" title={HELP.latency}>
+                    Latency
+                  </th>
                   <th className="text-right">Uptime</th>
-                  <th className="text-right" title={HELP.trust}>Trust</th>
+                  <th className="text-right" title={HELP.trust}>
+                    Trust
+                  </th>
                   <th className="pl-3">Signal</th>
                 </tr>
               </thead>
@@ -118,7 +127,10 @@ export default function SensorHealth() {
                       <td className="text-right">
                         <div className="ml-auto flex w-24 items-center gap-1.5">
                           <div className="h-1.5 flex-1 rounded-full bg-white/5">
-                            <div className="h-1.5 rounded-full" style={{ width: `${s.trust * 100}%`, background: s.trust > 0.8 ? '#22c55e' : s.trust > 0.45 ? '#facc15' : '#ef4444', transition: 'width 400ms' }} />
+                            <div
+                              className="h-1.5 rounded-full"
+                              style={{ width: `${s.trust * 100}%`, background: s.trust > 0.8 ? '#22c55e' : s.trust > 0.45 ? '#facc15' : '#ef4444', transition: 'width 400ms' }}
+                            />
                           </div>
                           <span className="w-9 font-mono text-[11px] tnum">{(s.trust * 100).toFixed(1)}</span>
                         </div>

@@ -32,7 +32,9 @@ export function ReportForm({ pt }: { pt: [number, number] | null }) {
   const submit = async () => {
     const parsed = ReportFormSchema.safeParse({ event, text, lng: pt?.[0] ?? NaN, lat: pt?.[1] ?? NaN, photo });
     if (!parsed.success) {
-      setErrors(parsed.error.issues.map((i) => (i.path[0] === 'lng' || i.path[0] === 'lat' ? 'Click on the map to set the location' : i.message)).filter((v, i, a) => a.indexOf(v) === i));
+      setErrors(
+        parsed.error.issues.map((i) => (i.path[0] === 'lng' || i.path[0] === 'lat' ? 'Click on the map to set the location' : i.message)).filter((v, i, a) => a.indexOf(v) === i),
+      );
       return;
     }
     setErrors([]);
@@ -42,7 +44,15 @@ export function ReportForm({ pt }: { pt: [number, number] | null }) {
     const { town, km } = nearestTown(parsed.data.lng, parsed.data.lat);
     const r = await send({
       type: 'report',
-      report: { t: simTime, lng: parsed.data.lng, lat: parsed.data.lat, event: parsed.data.event, text: parsed.data.text + (photo ? ' [photo attached]' : ''), place: km < 15 ? town.name : `${km.toFixed(1)} km from ${town.name}`, source: 'app' },
+      report: {
+        t: simTime,
+        lng: parsed.data.lng,
+        lat: parsed.data.lat,
+        event: parsed.data.event,
+        text: parsed.data.text + (photo ? ' [photo attached]' : ''),
+        place: km < 15 ? town.name : `${km.toFixed(1)} km from ${town.name}`,
+        source: 'app',
+      },
     });
     setResult(r);
     setBusy(false);
@@ -56,12 +66,25 @@ export function ReportForm({ pt }: { pt: [number, number] | null }) {
       <div className="text-[12px] text-slate-400">{pt ? `Location: ${pt[1].toFixed(3)}°N, ${pt[0].toFixed(3)}°E` : 'Click on the map to set the location.'}</div>
       <div className="mt-2 grid grid-cols-4 gap-1" role="radiogroup" aria-label="Event type">
         {EVENTS.map((e) => (
-          <button key={e} role="radio" aria-checked={event === e} onClick={() => setEvent(e)} className={`rounded-md border px-1 py-1 text-[11px] capitalize ${event === e ? 'border-volt/60 bg-volt/15 text-white' : 'border-white/10 text-slate-400'}`}>
+          <button
+            key={e}
+            role="radio"
+            aria-checked={event === e}
+            onClick={() => setEvent(e)}
+            className={`rounded-md border px-1 py-1 text-[11px] capitalize ${event === e ? 'border-volt/60 bg-volt/15 text-white' : 'border-white/10 text-slate-400'}`}
+          >
             {e}
           </button>
         ))}
       </div>
-      <textarea value={text} maxLength={280} onChange={(e) => setText(e.target.value)} placeholder="What do you see? (3-280 characters)" aria-label="Description" className="mt-2 h-16 w-full rounded-md border border-white/10 bg-ink-800 p-2 text-sm outline-none focus:border-volt/60" />
+      <textarea
+        value={text}
+        maxLength={280}
+        onChange={(e) => setText(e.target.value)}
+        placeholder="What do you see? (3-280 characters)"
+        aria-label="Description"
+        className="mt-2 h-16 w-full rounded-md border border-white/10 bg-ink-800 p-2 text-sm outline-none focus:border-volt/60"
+      />
       <div className="mt-1 flex items-center gap-2">
         <label className="btn h-8 cursor-pointer px-2 text-xs">
           <ImagePlus className="h-3.5 w-3.5" /> Photo (optional)

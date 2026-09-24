@@ -13,19 +13,30 @@ export default function Analytics() {
   const send = useStore((s) => s.send);
   const setSpeed = useStore((s) => s.setSpeed);
   const canvas = useRef<HTMLCanvasElement>(null);
+  const scenarioRef = useRef(snap.scenario.id);
   const states = useGeo('/geo/india-states.geojson');
   const districts = useGeo('/geo/india-districts.geojson');
-  const d = snap.density;
+  // the density grid only changes every ~5 s; keep the last posted field so heavy work runs only then
+  const [d, setD] = useState(snap.density);
+  useEffect(() => {
+    if (snap.changed.density || snap.density.width !== d.width || snap.scenario.id !== scenarioRef.current) {
+      scenarioRef.current = snap.scenario.id;
+      setD(snap.density);
+    }
+  }, [snap, d.width]);
+  const bboxKey = d.bbox.join(',');
 
-  // density-cell -> district lookup, built once per scenario
+  // density-cell -> district lookup, built once per domain
+  const W0 = d.width;
+  const H0 = d.height;
   const lookup = useMemo(() => {
-    const idx = new Int16Array(d.width * d.height);
-    const [w, , e, n] = d.bbox;
-    const dLng = (e - w) / d.width;
-    const dLat = (d.bbox[3] - d.bbox[1]) / d.height;
-    const cand = DISTRICTS.map((x, i) => ({ ...x, i })).filter((x) => x.lng > w - 1 && x.lng < e + 1 && x.lat > d.bbox[1] - 1 && x.lat < n + 1);
-    for (let j = 0; j < d.height; j++)
-      for (let i = 0; i < d.width; i++) {
+    const [w, s, e, n] = bboxKey.split(',').map(Number);
+    const idx = new Int16Array(W0 * H0);
+    const dLng = (e - w) / W0;
+    const dLat = (n - s) / H0;
+    const cand = DISTRICTS.map((x, i) => ({ ...x, i })).filter((x) => x.lng > w - 1 && x.lng < e + 1 && x.lat > s - 1 && x.lat < n + 1);
+    for (let j = 0; j < H0; j++)
+      for (let i = 0; i < W0; i++) {
         const lng = w + (i + 0.5) * dLng;
         const lat = n - (j + 0.5) * dLat;
         let best = -1;
@@ -37,10 +48,10 @@ export default function Analytics() {
             best = c.i;
           }
         }
-        idx[j * d.width + i] = best;
+        idx[j * W0 + i] = best;
       }
     return idx;
-  }, [snap.scenario.id, d.width, d.height]);
+  }, [bboxKey, W0, H0]);
 
   const ranking = useMemo(() => {
     const sums = new Map<number, number>();
@@ -53,7 +64,7 @@ export default function Analytics() {
       .map(([i, v]) => ({ name: DISTRICTS[i].name, state: DISTRICTS[i].state, v }))
       .sort((a, b) => b.v - a.v)
       .slice(0, 12);
-  }, [d.t, lookup]);
+  }, [d, lookup]);
 
   useEffect(() => {
     const c = canvas.current;
@@ -74,20 +85,22 @@ export default function Analytics() {
     ctx.drawImage(tmp, 0, 0, W, H);
     ctx.globalAlpha = 1;
     if (states) drawGeo(ctx, states, d.bbox, W, H, { stroke: '#64748b', width: 1.2 });
-  }, [d.t, states, districts]);
+  }, [d, states, districts]);
 
   const strikes = snap.strikes;
-  const cg = strikes.filter((s) => s.kind === 'CG');
+  const cg = useMemo(() => strikes.filter((s) => s.kind === 'CG'), [strikes]);
   const pos = cg.filter((s) => s.polarity > 0).length;
   const bins = useMemo(() => {
     const t = snap.stats.simTime;
     const arr = Array.from({ length: 10 }, (_, i) => ({ t: -20 + i * 2, cg: 0, ic: 0 }));
     for (const s of strikes) {
       const k = Math.floor((s.t - (t - 20 * 60000)) / 120000);
-      if (k >= 0 && k < 10) s.kind === 'CG' ? arr[k].cg++ : arr[k].ic++;
+      if (k < 0 || k >= 10) continue;
+      if (s.kind === 'CG') arr[k].cg++;
+      else arr[k].ic++;
     }
     return arr;
-  }, [snap.stats.tick]);
+  }, [strikes, snap.stats.simTime]);
   const hist = useMemo(() => {
     const b = [0, 10, 20, 30, 40, 60, 80, 120];
     const c = b.map(() => 0);
@@ -97,7 +110,7 @@ export default function Analytics() {
       c[i]++;
     }
     return b.map((x, i) => [i === b.length - 1 ? `${x}+` : `${x}-${b[i + 1]}`, c[i]]);
-  }, [snap.stats.tick]);
+  }, [cg]);
 
   return (
     <div className="scroll-thin h-full space-y-3 overflow-y-auto p-3">
@@ -111,7 +124,12 @@ export default function Analytics() {
               <div className="h-2 w-32 rounded" style={{ background: lutCss(DENSITY) }} /> 0 → 12+ strikes / 25 km²
             </div>
           </div>
-          <canvas ref={canvas} width={1000} height={Math.round((1000 * (d.bbox[3] - d.bbox[1])) / (d.bbox[2] - d.bbox[0]) / Math.cos((((d.bbox[1] + d.bbox[3]) / 2) * Math.PI) / 180))} className="w-full rounded-lg" />
+          <canvas
+            ref={canvas}
+            width={1000}
+            height={Math.round((1000 * (d.bbox[3] - d.bbox[1])) / (d.bbox[2] - d.bbox[0]) / Math.cos((((d.bbox[1] + d.bbox[3]) / 2) * Math.PI) / 180))}
+            className="w-full rounded-lg"
+          />
         </div>
         <div className="space-y-3">
           <div className="panel p-3">

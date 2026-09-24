@@ -5,9 +5,7 @@ export function distanceKm(lng1: number, lat1: number, lng2: number, lat2: numbe
   const R = 6371;
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
   const dLng = ((lng2 - lng1) * Math.PI) / 180;
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLng / 2) ** 2;
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLng / 2) ** 2;
   return 2 * R * Math.asin(Math.min(1, Math.sqrt(a)));
 }
 
@@ -15,7 +13,7 @@ export function distanceKm(lng1: number, lat1: number, lng2: number, lat2: numbe
 export function bearingDeg(lng1: number, lat1: number, lng2: number, lat2: number): number {
   const dx = (lng2 - lng1) * kmPerDegLng((lat1 + lat2) / 2);
   const dy = (lat2 - lat1) * KM_PER_DEG_LAT;
-  return (Math.atan2(dx, dy) * 180 / Math.PI + 360) % 360;
+  return ((Math.atan2(dx, dy) * 180) / Math.PI + 360) % 360;
 }
 
 /** move a point by distance km toward heading deg */

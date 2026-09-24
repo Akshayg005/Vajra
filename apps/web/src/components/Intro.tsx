@@ -33,7 +33,7 @@ function Earth({ onDone }: { onDone: () => void }) {
     camera.position.copy(latLngToVec(lat, lng, dist));
     camera.lookAt(0, 0, 0);
     pulses.current.forEach((m, i) => {
-      const ph = ((t * 0.9 + i * 0.33) % 1);
+      const ph = (t * 0.9 + i * 0.33) % 1;
       m.scale.setScalar(0.02 + ph * 0.12);
       (m.material as THREE.MeshBasicMaterial).opacity = (1 - ph) * Math.min(1, t / 3);
     });
@@ -43,14 +43,15 @@ function Earth({ onDone }: { onDone: () => void }) {
     }
   });
   const spots = useMemo(
-    () => [
-      [22.6, 88.4],
-      [25.6, 85.1],
-      [19.1, 72.9],
-      [28.6, 77.2],
-      [20.3, 85.8],
-      [20.7, 77.8],
-    ].map(([la, ln]) => latLngToVec(la, ln, 1.005)),
+    () =>
+      [
+        [22.6, 88.4],
+        [25.6, 85.1],
+        [19.1, 72.9],
+        [28.6, 77.2],
+        [20.3, 85.8],
+        [20.7, 77.8],
+      ].map(([la, ln]) => latLngToVec(la, ln, 1.005)),
     [],
   );
   return (
@@ -66,7 +67,13 @@ function Earth({ onDone }: { onDone: () => void }) {
         <meshBasicMaterial color="#38bdf8" transparent opacity={0.08} side={THREE.BackSide} />
       </mesh>
       {spots.map((p, i) => (
-        <mesh key={i} position={p} ref={(m) => { if (m) pulses.current[i] = m; }}>
+        <mesh
+          key={i}
+          position={p}
+          ref={(m) => {
+            if (m) pulses.current[i] = m;
+          }}
+        >
           <sphereGeometry args={[0.1, 16, 16]} />
           <meshBasicMaterial color="#22d3ee" transparent depthWrite={false} />
         </mesh>

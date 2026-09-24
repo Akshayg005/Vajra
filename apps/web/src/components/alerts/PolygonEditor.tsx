@@ -17,11 +17,18 @@ export function PolygonEditor({ alert, onSave, onCancel }: { alert: Alert; onSav
   const overlayRef = useRef<MapboxOverlay | null>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const dragging = useRef<number | null>(null);
+  const initial = useRef(alert.polygon);
 
   useEffect(() => {
-    const xs = alert.polygon.map((p) => p[0]);
-    const ys = alert.polygon.map((p) => p[1]);
-    const map = new maplibregl.Map({ container: ref.current!, style: BASE_STYLE, bounds: [Math.min(...xs) - 0.2, Math.min(...ys) - 0.2, Math.max(...xs) + 0.2, Math.max(...ys) + 0.2], attributionControl: false, fadeDuration: 0 });
+    const xs = initial.current.map((p) => p[0]);
+    const ys = initial.current.map((p) => p[1]);
+    const map = new maplibregl.Map({
+      container: ref.current!,
+      style: BASE_STYLE,
+      bounds: [Math.min(...xs) - 0.2, Math.min(...ys) - 0.2, Math.max(...xs) + 0.2, Math.max(...ys) + 0.2],
+      attributionControl: false,
+      fadeDuration: 0,
+    });
     mapRef.current = map;
     const overlay = new MapboxOverlay({ interleaved: false, layers: [] });
     overlayRef.current = overlay;
@@ -40,7 +47,15 @@ export function PolygonEditor({ alert, onSave, onCancel }: { alert: Alert; onSav
     const rgb = SEV_RGB[alert.severity];
     o.setProps({
       layers: [
-        new PolygonLayer<{ ring: LngLat[] }>({ id: 'edit-poly', data: [{ ring }], getPolygon: (d) => d.ring, getFillColor: [...rgb, 40], getLineColor: [...rgb, 255], getLineWidth: 2, lineWidthUnits: 'pixels' }),
+        new PolygonLayer<{ ring: LngLat[] }>({
+          id: 'edit-poly',
+          data: [{ ring }],
+          getPolygon: (d) => d.ring,
+          getFillColor: [...rgb, 40],
+          getLineColor: [...rgb, 255],
+          getLineWidth: 2,
+          lineWidthUnits: 'pixels',
+        }),
         new ScatterplotLayer<{ p: LngLat; i: number }>({
           id: 'edit-vertices',
           data: poly.map((p, i) => ({ p, i })),

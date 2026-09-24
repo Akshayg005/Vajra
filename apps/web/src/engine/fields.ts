@@ -170,8 +170,7 @@ export function blockMatch(prev: Float32Array, curr: Float32Array, w: number, h:
   for (let BJ = 0; BJ < bh; BJ++)
     for (let BI = 0; BI < bw; BI++) {
       let energy = 0;
-      for (let y = BJ * block; y < Math.min(h, (BJ + 1) * block); y++)
-        for (let x = BI * block; x < Math.min(w, (BI + 1) * block); x++) energy += curr[y * w + x] > 20 ? 1 : 0;
+      for (let y = BJ * block; y < Math.min(h, (BJ + 1) * block); y++) for (let x = BI * block; x < Math.min(w, (BI + 1) * block); x++) energy += curr[y * w + x] > 20 ? 1 : 0;
       const idx = BJ * bw + BI;
       if (energy < 3) {
         u[idx] = fallback[0];
@@ -258,11 +257,7 @@ export function advect(src: Float32Array, w: number, h: number, mf: MotionField,
       if (x0 >= 0 && y0 >= 0 && x0 < w - 1 && y0 < h - 1) {
         const fx = si - x0;
         const fy = sj - y0;
-        val =
-          src[y0 * w + x0] * (1 - fx) * (1 - fy) +
-          src[y0 * w + x0 + 1] * fx * (1 - fy) +
-          src[(y0 + 1) * w + x0] * (1 - fx) * fy +
-          src[(y0 + 1) * w + x0 + 1] * fx * fy;
+        val = src[y0 * w + x0] * (1 - fx) * (1 - fy) + src[y0 * w + x0 + 1] * fx * (1 - fy) + src[(y0 + 1) * w + x0] * (1 - fx) * fy + src[(y0 + 1) * w + x0 + 1] * fx * fy;
       }
       if (growth) val = val > 5 ? val + growth(i, j) : val;
       out[j * w + i] = clamp(val, 0, 75);

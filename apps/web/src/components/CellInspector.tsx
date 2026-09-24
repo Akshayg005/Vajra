@@ -56,7 +56,13 @@ export function CellInspector() {
   if (!c) return null;
   const h = c.history;
   return (
-    <motion.aside initial={{ x: 30, opacity: 0 }} animate={{ x: 0, opacity: 1 }} className="panel pointer-events-auto flex max-h-full w-[410px] flex-col overflow-hidden" role="dialog" aria-label={`Storm cell ${c.id}`}>
+    <motion.aside
+      initial={{ x: 30, opacity: 0 }}
+      animate={{ x: 0, opacity: 1 }}
+      className="panel pointer-events-auto flex max-h-full w-[410px] flex-col overflow-hidden"
+      role="dialog"
+      aria-label={`Storm cell ${c.id}`}
+    >
       <div className="flex items-start justify-between border-b border-white/5 p-3">
         <div>
           <div className="flex items-center gap-2">
@@ -80,7 +86,10 @@ export function CellInspector() {
       <div className="scroll-thin space-y-3 overflow-y-auto p-3">
         <div className="flex gap-1" title={HELP.stage}>
           {(['initiation', 'growth', 'mature', 'decay'] as const).map((s) => (
-            <div key={s} className={`flex-1 rounded px-1 py-1 text-center text-[10px] font-semibold uppercase tracking-wider ${c.stage === s ? 'bg-volt/20 text-volt ring-1 ring-volt/50' : 'bg-white/[0.03] text-slate-500'}`}>
+            <div
+              key={s}
+              className={`flex-1 rounded px-1 py-1 text-center text-[10px] font-semibold uppercase tracking-wider ${c.stage === s ? 'bg-volt/20 text-volt ring-1 ring-volt/50' : 'bg-white/[0.03] text-slate-500'}`}
+            >
               {STAGE_LABEL[s]}
             </div>
           ))}
@@ -110,7 +119,16 @@ export function CellInspector() {
           <Metric label="Echo top" help={HELP.echoTop} value={c.echoTopKm} unit="km" d={1} series={h.map((x) => x.echoTopKm)} color="#a78bfa" />
           <Metric label="VIL" help={HELP.vil} value={c.vil} unit="kg/m²" d={1} series={h.map((x) => x.vil)} color="#60a5fa" />
           <Metric label="Flash rate" help={HELP.flashRate} value={c.flashRate} unit="fl/min" d={1} series={h.map((x) => x.flashRate)} color="#22d3ee" />
-          <Metric label="Cloud-top temp" help={HELP.ctt} value={c.cttK - 273.15} unit="°C" d={1} sub={`${c.cttK.toFixed(1)} K`} series={h.map((x) => x.cttK - 273.15)} color="#e879f9" />
+          <Metric
+            label="Cloud-top temp"
+            help={HELP.ctt}
+            value={c.cttK - 273.15}
+            unit="°C"
+            d={1}
+            sub={`${c.cttK.toFixed(1)} K`}
+            series={h.map((x) => x.cttK - 273.15)}
+            color="#e879f9"
+          />
           <Metric label="Cloud-top cooling" help={HELP.cooling} value={c.cttCoolingK15} unit="K/15 min" d={1} series={[]} color="#e879f9" />
         </div>
         <div className="grid grid-cols-4 gap-2 rounded-lg bg-white/[0.03] p-2 text-center">
@@ -124,7 +142,11 @@ export function CellInspector() {
           ).map(([l, v, u, help]) => (
             <div key={l} title={help}>
               <div className="text-[10px] uppercase tracking-wider text-slate-400">{l}</div>
-              <AnimatedNumber value={v} format={l === 'CAPE' || l === 'CIN' ? (x) => n0(x).replace('-', '−') : (x) => x.toFixed(1)} className="font-mono text-sm font-semibold text-white" />
+              <AnimatedNumber
+                value={v}
+                format={l === 'CAPE' || l === 'CIN' ? (x) => n0(x).replace('-', '−') : (x) => x.toFixed(1)}
+                className="font-mono text-sm font-semibold text-white"
+              />
               <div className="text-[9px] text-slate-500">{u}</div>
             </div>
           ))}
@@ -133,7 +155,12 @@ export function CellInspector() {
           <div className="panel-title mb-1.5">Multi-task nowcast (next 60 min)</div>
           <div className="space-y-1">
             {(Object.keys(PROB_LABEL) as (keyof MultiTaskProbs)[]).map((k) => (
-              <button key={k} onClick={() => setTarget(k)} aria-pressed={target === k} className={`grid w-full grid-cols-[110px_1fr_52px] items-center gap-2 rounded px-1 text-left text-[12px] ${target === k ? 'bg-white/5' : ''}`}>
+              <button
+                key={k}
+                onClick={() => setTarget(k)}
+                aria-pressed={target === k}
+                className={`grid w-full grid-cols-[110px_1fr_52px] items-center gap-2 rounded px-1 text-left text-[12px] ${target === k ? 'bg-white/5' : ''}`}
+              >
                 <span className="text-slate-300">{PROB_LABEL[k]}</span>
                 <div className="h-2 rounded-full bg-white/5">
                   <div className="h-2 rounded-full bg-gradient-to-r from-plasma to-volt" style={{ width: `${c.probs[k] * 100}%`, transition: 'width 400ms ease-out' }} />
@@ -167,7 +194,9 @@ export function CellInspector() {
                       {e.name} <span className="text-[10px] text-slate-500">{e.kind}</span>
                     </td>
                     <td className="text-right font-mono tnum text-slate-400">{e.dist.toFixed(1)} km</td>
-                    <td className={`text-right font-mono tnum ${e.eta <= 30 ? 'text-sev-red' : e.eta <= 60 ? 'text-sev-orange' : 'text-slate-300'}`}>{e.eta === 0 ? 'NOW' : `${e.eta} min`}</td>
+                    <td className={`text-right font-mono tnum ${e.eta <= 30 ? 'text-sev-red' : e.eta <= 60 ? 'text-sev-orange' : 'text-slate-300'}`}>
+                      {e.eta === 0 ? 'NOW' : `${e.eta} min`}
+                    </td>
                     <td className="text-right font-mono tnum text-slate-400">{fmtIST(simTime + e.eta * 60000)}</td>
                   </tr>
                 ))}
@@ -178,13 +207,33 @@ export function CellInspector() {
         <button className="btn btn-primary w-full" onClick={() => nav('/storm3d')}>
           <Box className="h-4 w-4" /> Open 3D view
         </button>
-        <div className="text-center text-[10px] text-slate-500">CTT {degC(c.cttK)} · cooling {c.cttCoolingK15.toFixed(1)} K/15 min</div>
+        <div className="text-center text-[10px] text-slate-500">
+          CTT {degC(c.cttK)} · cooling {c.cttCoolingK15.toFixed(1)} K/15 min
+        </div>
       </div>
     </motion.aside>
   );
 }
 
-function Metric({ label, value, unit, d, series, color, help, sub }: { label: string; value: number; unit: string; d: number; series: number[]; color: string; help: string; sub?: string }) {
+function Metric({
+  label,
+  value,
+  unit,
+  d,
+  series,
+  color,
+  help,
+  sub,
+}: {
+  label: string;
+  value: number;
+  unit: string;
+  d: number;
+  series: number[];
+  color: string;
+  help: string;
+  sub?: string;
+}) {
   return (
     <div className="rounded-lg bg-white/[0.03] p-2" title={help}>
       <div className="text-[10px] uppercase tracking-wider text-slate-400">{label}</div>

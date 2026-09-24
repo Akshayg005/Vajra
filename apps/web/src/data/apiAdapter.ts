@@ -4,7 +4,15 @@ import type { StartOptions } from '../engine/worker';
 import type { FrameAt } from '../engine/engine';
 import { PointNowcastSchema } from './schemas';
 
-const emptyGrid = (name: GridField['name'], bbox: [number, number, number, number], t: number): GridField => ({ name, width: 1, height: 1, bbox, resKm: 0, t, data: new Float32Array(1) });
+const emptyGrid = (name: GridField['name'], bbox: [number, number, number, number], t: number): GridField => ({
+  name,
+  width: 1,
+  height: 1,
+  bbox,
+  resKm: 0,
+  t,
+  data: new Float32Array(1),
+});
 
 type ApiSnapshot = Omit<WorldSnapshot, 'dbz' | 'ctt' | 'nowcast' | 'confidence' | 'nwp' | 'density'>;
 

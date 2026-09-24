@@ -22,7 +22,10 @@ export function EventFeed({ limit = 9 }: { limit?: number }) {
   const events = useStore((s) => s.snap?.events);
   const select = useStore((s) => s.select);
   const now = useSimNow();
-  const list = [...(events ?? [])].filter((e) => e.kind !== 'cell_dead').reverse().slice(0, limit);
+  const list = [...(events ?? [])]
+    .filter((e) => e.kind !== 'cell_dead')
+    .reverse()
+    .slice(0, limit);
   return (
     <div className="panel pointer-events-auto w-[260px] p-3">
       <div className="panel-title mb-2">Live event log</div>

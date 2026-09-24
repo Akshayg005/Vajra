@@ -19,7 +19,11 @@ export default function CommandCenter() {
           Director: click on the map to {pickMode === 'spawn' ? 'spawn a storm cell' : 'place a report'} · Esc to cancel
         </div>
       )}
-      {frameLoading && <div className="pointer-events-none absolute left-1/2 top-4 z-10 -translate-x-1/2 animate-pulse rounded-full border border-volt/40 bg-ink-900/90 px-3 py-1 font-mono text-xs text-volt">computing frame…</div>}
+      {frameLoading && (
+        <div className="pointer-events-none absolute left-1/2 top-4 z-10 -translate-x-1/2 animate-pulse rounded-full border border-volt/40 bg-ink-900/90 px-3 py-1 font-mono text-xs text-volt">
+          computing frame…
+        </div>
+      )}
       <div className="pointer-events-none absolute inset-0 flex gap-3 p-3">
         <div className="scroll-thin flex flex-col gap-3 overflow-y-auto pb-24">
           <LayerPanel />

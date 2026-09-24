@@ -13,7 +13,9 @@ export function ChartCard({ name, points }: { name: string; points: [number, num
           tooltip: { trigger: 'axis', valueFormatter: (v: number) => `${v}%` },
           xAxis: { type: 'value', min: 15, max: 180, ...AXIS },
           yAxis: { type: 'value', min: 0, max: 100, ...AXIS },
-          series: [{ type: 'line', smooth: true, data: points, areaStyle: { color: 'rgba(34,211,238,0.15)' }, lineStyle: { color: '#22d3ee', width: 2 }, itemStyle: { color: '#22d3ee' } }],
+          series: [
+            { type: 'line', smooth: true, data: points, areaStyle: { color: 'rgba(34,211,238,0.15)' }, lineStyle: { color: '#22d3ee', width: 2 }, itemStyle: { color: '#22d3ee' } },
+          ],
         }}
       />
     </div>
@@ -40,7 +42,9 @@ export function MiniMap({ snap, place, cellId }: { snap: WorldSnapshot; place: {
         {snap.cells.map((q) => (
           <g key={q.id}>
             <circle cx={x(q.lng)} cy={y(q.lat)} r={Math.max(3, q.radiusKm / 3)} fill="none" stroke={SEV_HEX[q.severity]} strokeWidth={q.id === cellId ? 2 : 1} />
-            {q.forecastTrack.length > 4 && <line x1={x(q.lng)} y1={y(q.lat)} x2={x(q.forecastTrack[4].lng)} y2={y(q.forecastTrack[4].lat)} stroke="#a78bfa" strokeWidth={1} strokeDasharray="2 2" />}
+            {q.forecastTrack.length > 4 && (
+              <line x1={x(q.lng)} y1={y(q.lat)} x2={x(q.forecastTrack[4].lng)} y2={y(q.forecastTrack[4].lat)} stroke="#a78bfa" strokeWidth={1} strokeDasharray="2 2" />
+            )}
           </g>
         ))}
         <circle cx={x(place.lng)} cy={y(place.lat)} r={4} fill="#22d3ee" stroke="#fff" strokeWidth={1.5} />

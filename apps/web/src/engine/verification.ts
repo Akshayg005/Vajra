@@ -26,6 +26,26 @@ interface Acc {
 
 const THR = 35;
 
+/** Standard categorical scores from a 2x2 contingency table (WWRP/WGNE JWGFVR definitions). */
+export function categorical(t: ContingencyScore) {
+  const { hits: H, misses: M, falseAlarms: F, correctNegatives: C } = t;
+  const N = H + M + F + C;
+  const hr = ((H + M) * (H + F)) / Math.max(1, N);
+  return {
+    pod: H / Math.max(1e-6, H + M),
+    far: F / Math.max(1e-6, H + F),
+    csi: H / Math.max(1e-6, H + M + F),
+    ets: (H - hr) / Math.max(1e-6, H + M + F - hr),
+  };
+}
+
+/** Brier score of probabilities p against binary outcomes o. */
+export function brier(p: ArrayLike<number>, o: ArrayLike<number>) {
+  let s = 0;
+  for (let i = 0; i < p.length; i++) s += (p[i] - o[i]) ** 2;
+  return p.length ? s / p.length : 0;
+}
+
 /**
  * Honest verification: every 10 sim-min each method issues forecasts for 30/60/120/180 min.
  * When the valid time arrives they are scored against the observed field (8 km grid, >=35 dBZ event).
@@ -38,7 +58,10 @@ export class Verifier {
   private rel: { f: number; o: number; n: number }[] = Array.from({ length: 10 }, () => ({ f: 0, o: 0, n: 0 }));
   samples = 0;
   updatedAt = 0;
-  constructor(public w: number, public h: number) {}
+  constructor(
+    public w: number,
+    public h: number,
+  ) {}
 
   issue(t: number, lead: number, method: Method, dbz: Float32Array, prob: Float32Array) {
     this.pending.push({ validAt: t + lead * 60000, lead, method, dbz, prob });
@@ -131,20 +154,20 @@ export class Verifier {
       for (const lead of LEADS) {
         const a = this.acc.get(`${m}:${lead}`);
         if (!a) continue;
-        const { hits: H, misses: M, falseAlarms: F, correctNegatives: C } = a.table;
-        const N = H + M + F + C;
-        const hr = ((H + M) * (H + F)) / Math.max(1, N);
+        const cat = categorical(a.table);
         scores.push({
           method: m,
           leadMin: lead,
           n: a.n,
-          pod: H / Math.max(1e-6, H + M),
-          far: F / Math.max(1e-6, H + F),
-          csi: H / Math.max(1e-6, H + M + F),
-          ets: (H - hr) / Math.max(1e-6, H + M + F - hr),
+          ...cat,
           fss: a.fssN ? a.fssSum / a.fssN : 0,
           brier: a.brierN ? a.brierSum / a.brierN : 0,
-          table: { hits: Math.round(H), misses: Math.round(M), falseAlarms: Math.round(F), correctNegatives: Math.round(C) },
+          table: {
+            hits: Math.round(a.table.hits),
+            misses: Math.round(a.table.misses),
+            falseAlarms: Math.round(a.table.falseAlarms),
+            correctNegatives: Math.round(a.table.correctNegatives),
+          },
         });
       }
     const reliability: ReliabilityBin[] = this.rel.map((r, i) => ({ forecast: r.n ? r.f / r.n : (i + 0.5) / 10, observed: r.n ? r.o / r.n : NaN, count: Math.round(r.n) }));

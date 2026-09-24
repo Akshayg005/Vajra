@@ -129,18 +129,37 @@ export function MapView({ compact = false, onMapClick }: { compact?: boolean; on
       if (L.satellite) layers.push(...bmpLayers('sat', sat, O.satellite, now, 600));
       if (L.radar) layers.push(...bmpLayers('radar', radar, O.radar, now, 250));
       if (L.nowcast && !st.frame) layers.push(...bmpLayers('bands', bands, O.nowcast, now, 500), ...bmpLayers('band-single', single, O.nowcast, now, 500));
-      if (L.extended && !st.frame && ext.img) layers.push(new BitmapLayer({ id: 'ext', image: ext.img, bounds: ext.bounds, opacity: O.extended, _imageCoordinateSystem: COORDINATE_SYSTEM.LNGLAT }));
+      if (L.extended && !st.frame && ext.img)
+        layers.push(new BitmapLayer({ id: 'ext', image: ext.img, bounds: ext.bounds, opacity: O.extended, _imageCoordinateSystem: COORDINATE_SYSTEM.LNGLAT }));
       if (L.confidence) layers.push(...bmpLayers('conf', conf, O.confidence, now, 600));
       if (L.rings || L.confidence) layers.push(...ringLayers(snap.sensors, snap.stats.tick, O.rings));
       if (L.cities) layers.push(...cityLayers(snap.scenario.bbox, O.cities, zoom));
       if (L.assets && !compact) layers.push(...assetLayers(snap.scenario.bbox, O.assets));
       if (L.alerts && !st.frame) layers.push(alertLayer(snap.alerts.filter(isLive), pulse, O.alerts));
       if (L.lightning) layers.push(...strikeLayers(strikesData, flashing, seenStrike, simNow, strikeTick, now, O.lightning));
-      if (L.reports && !compact) layers.push(reportLayer(snap.reports.filter((r) => simNow - r.t < 90 * 60000), O.reports));
+      if (L.reports && !compact)
+        layers.push(
+          reportLayer(
+            snap.reports.filter((r) => simNow - r.t < 90 * 60000),
+            O.reports,
+          ),
+        );
       if (L.tracks && cells.length) layers.push(...trackLayers(cells, selected, O.tracks));
       if (L.cells) {
         const cellData = st.frame ? st.frame.cells : cells.filter((c) => c.maxDbz > 30);
-        layers.push(...cellLayers(cellData, cells.filter((c) => c.lightningJump), selected, pulse, now, snap.stats.tick, !st.frame, compact, O.cells));
+        layers.push(
+          ...cellLayers(
+            cellData,
+            cells.filter((c) => c.lightningJump),
+            selected,
+            pulse,
+            now,
+            snap.stats.tick,
+            !st.frame,
+            compact,
+            O.cells,
+          ),
+        );
       }
       overlay.setProps({ layers });
     };

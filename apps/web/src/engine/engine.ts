@@ -17,16 +17,16 @@ import type {
 } from '@vajra/contracts';
 import { Rng, makeNoise } from './prng';
 import { SCENARIOS, scenarioById } from './scenarios';
-import { type CellAgent, envelope, forecastTrack, makeCell, moveCell, recordHistory, resetCellCounter, sampleAndDetectJump, updatePhysics } from './cells';
+import { type CellAgent, envelope, forecastTrack, makeCell, moveCell, recordHistory, sampleAndDetectJump, updatePhysics } from './cells';
 import { Grid, advect, blockMatch, downsample, neighbourhoodProb, renderCtt, renderDbz, type MotionField } from './fields';
 import { explain, predict } from './model';
 import { classifyRegime } from './regime';
 import { AlertManager, severityOf } from './alerts';
 import { type SensorAgent, injectFault, makeSensors, radarCoverage, stepSensors } from './sensors';
-import { maybeCrowdReport, nextReportId, resetReportIds, verifyReport } from './reports';
+import { maybeCrowdReport, verifyReport } from './reports';
 import { inIndia } from './places';
 import { LEADS, Verifier } from './verification';
-import { clamp, distanceKm, istHour, moveKm } from './geo';
+import { clamp, distanceKm, moveKm } from './geo';
 import { RingBuffer } from './ring';
 
 export const TICK_MS = 250;
@@ -98,6 +98,8 @@ export class World {
   noise!: ReturnType<typeof makeNoise>;
   cells: CellAgent[] = [];
   strikeSeq = 0;
+  cellSeq = 0;
+  reportSeq = 0;
   strikesTotal = 0;
   grid!: Grid;
   ncGrid!: Grid;
@@ -159,8 +161,8 @@ export class World {
     this.rng = new Rng(this.seed);
     this.jrng = this.rng.fork(99);
     this.noise = makeNoise(this.seed);
-    resetCellCounter();
-    resetReportIds();
+    this.cellSeq = 0;
+    this.reportSeq = 0;
     this.cells = [];
     this.strikeRing.clear();
     this.recentCache = { tick: -1, list: [] };
@@ -228,7 +230,7 @@ export class World {
   }
 
   spawn(lng: number, lat: number, type: StormType, strength: number, injected = false) {
-    const c = makeCell(this.rng, this.t, lng, lat, type, strength, this.sc, injected);
+    const c = makeCell(this.rng, this.t, lng, lat, type, strength, this.sc, injected, ++this.cellSeq);
     this.cells.push(c);
     this.pushEvent('cell_new', `New ${type} cell ${c.id} initiated`, undefined, c.id);
     return c;
@@ -312,7 +314,13 @@ export class World {
       const env = this.envAt(c.lng, c.lat, c);
       updatePhysics(c, this.t, dtMin, env, this.rng, this.lightningFactor());
       moveCell(c, dtMin, this.sc, this.noise.n2, this.t);
-      if (sampleAndDetectJump(c, this.t)) this.pushEvent('jump', `Lightning jump in ${c.id}: +${c.jumpSigma.toFixed(1)} sigma, ${c.flashRate.toFixed(0)} fl/min - severe weather likely in 10-30 min`, 'orange', c.id);
+      if (sampleAndDetectJump(c, this.t))
+        this.pushEvent(
+          'jump',
+          `Lightning jump in ${c.id}: +${c.jumpSigma.toFixed(1)} sigma, ${c.flashRate.toFixed(0)} fl/min - severe weather likely in 10-30 min`,
+          'orange',
+          c.id,
+        );
       recordHistory(c, this.t);
       this.lightning(c, dtMin);
       const { ageMin } = envelope(c, this.t);
@@ -363,15 +371,34 @@ export class World {
     if (this.t - this.lastSensorAt >= 60000) {
       const n = Math.max(1, Math.round((this.t - Math.max(this.lastSensorAt, this.t - 5 * 60000)) / 60000));
       this.lastSensorAt = this.t;
-      for (let k = 0; k < n; k++) stepSensors(this.sensors, this.t, this.rng, (lng, lat) => this.tempAt(lng, lat), (s, text) => this.pushEvent('sensor', text, s.state === 'excluded' ? 'orange' : 'green'));
+      for (let k = 0; k < n; k++)
+        stepSensors(
+          this.sensors,
+          this.t,
+          this.rng,
+          (lng, lat) => this.tempAt(lng, lat),
+          (s, text) => this.pushEvent('sensor', text, s.state === 'excluded' ? 'orange' : 'green'),
+        );
     }
     if (this.t - this.lastConfAt >= 5 * 60000) this.computeConfidence();
     if (this.t - this.lastNwpAt >= 15 * 60000) this.computeNwp();
-    const rep = maybeCrowdReport(this.rng, this.t, this.cells, this.strikes, this.reports, this.sc.bbox, 0.25 * clamp(this.cells.filter((c) => c.maxDbz > 45).length / 3, 0.2, 2), dtMin);
+    const rep = maybeCrowdReport(
+      this.rng,
+      this.t,
+      this.cells,
+      this.strikes,
+      this.reports,
+      this.sc.bbox,
+      0.25 * clamp(this.cells.filter((c) => c.maxDbz > 45).length / 3, 0.2, 2),
+      dtMin,
+      this.reportSeq + 1,
+    );
     if (rep) {
+      this.reportSeq++;
       this.reports.push(rep);
       if (this.reports.length > 150) this.reports.shift();
-      if (!spin) this.pushEvent('report', `Citizen report ${rep.id}: ${rep.event} at ${rep.place} -> ${rep.status.toUpperCase()}`, rep.status === 'verified' ? 'yellow' : undefined);
+      if (!spin)
+        this.pushEvent('report', `Citizen report ${rep.id}: ${rep.event} at ${rep.place} -> ${rep.status.toUpperCase()}`, rep.status === 'verified' ? 'yellow' : undefined);
     }
     // feed latency jitter (40-400 ms, log-normal around ~120 ms)
     this.latencyMs = clamp(this.latencyMs * 0.6 + 0.4 * this.jrng.logNormal(120, 0.55), 40, 400);
@@ -442,7 +469,7 @@ export class World {
       if (this.rng.chance(0.004)) {
         c.splitDone = true;
         const [lng, lat] = moveKm(c.lng, c.lat, (c.headingDeg + 270) % 360, c.radiusKm * 1.4);
-        const child = makeCell(this.rng, this.t, lng, lat, c.type === 'supercell' ? 'supercell' : 'multicell', c.strength * 0.7, this.sc);
+        const child = makeCell(this.rng, this.t, lng, lat, c.type === 'supercell' ? 'supercell' : 'multicell', c.strength * 0.7, this.sc, false, ++this.cellSeq);
         child.headingDeg = (c.headingDeg - 30 + 360) % 360;
         child.growthMin = 8;
         child.splitDone = true;
@@ -492,7 +519,7 @@ export class World {
     const h = Math.floor(this.grid.h / NC_F);
     const prev = this.coarseHist.length >= 3 ? this.coarseHist[this.coarseHist.length - 3] : null; // 10 min ago
     const steer = moveKm(0, 0, this.sc.steeringDeg, (this.sc.steeringKmh * 10) / 60);
-    const fb: [number, number] = [steer[0] * 111.32 * Math.cos((this.sc.center[1] * Math.PI) / 180) / (FINE_KM * NC_F), -steer[1] * 111.32 / (FINE_KM * NC_F)];
+    const fb: [number, number] = [(steer[0] * 111.32 * Math.cos((this.sc.center[1] * Math.PI) / 180)) / (FINE_KM * NC_F), (-steer[1] * 111.32) / (FINE_KM * NC_F)];
     this.motion = prev ? blockMatch(prev.d, coarse, w, h, 8, 4, [Math.round(fb[0]), Math.round(fb[1])]) : blockMatch(coarse, coarse, w, h, 8, 0, fb);
     const fields = new Map<number, { dbz: Float32Array; prob: Float32Array }>();
     const hr = this.phaseHour();
@@ -644,7 +671,7 @@ export class World {
     };
   }
 
-  snapshot(): WorldSnapshot & { changed: World["dirty"] } {
+  snapshot(): WorldSnapshot & { changed: World['dirty'] } {
     const g = this.grid;
     const strikesRecent = this.strikes.filter((s) => s.t >= this.t - 20 * 60000);
     const lastMin = strikesRecent.filter((s) => s.t >= this.t - 60000).length;
@@ -711,12 +738,23 @@ export class World {
     if (offsetMin < 2.5 || !this.motion) return { t: this.t, offsetMin: 0, dbz: g.field('dbz', this.t, this.dbz.slice()), cells: this.cellsLite(), kind: 'now' };
     // forecast: advect the fine mosaic with the (coarse) motion field + growth/decay
     const fine = advect(this.dbz, g.w, g.h, this.motion, offsetMin / 10, NC_F, this.growthTerm(offsetMin, g, 1));
-    const cells = this.cells.map((c) => {
-      const [lng, lat] = moveKm(c.lng, c.lat, c.headingDeg, (c.speedKmh * offsetMin) / 60);
-      const I = envelope(c, this.t + offsetMin * 60000).I;
-      const p = this.probs.get(c.id);
-      return { id: c.id, lng, lat, maxDbz: clamp(18 + 47 * c.strength * I, 10, 70), radiusKm: c.radiusKm, severity: p ? severityOf(p, c) : ('green' as Severity), stage: c.stage, type: c.type };
-    }).filter((c) => c.maxDbz > 22);
+    const cells = this.cells
+      .map((c) => {
+        const [lng, lat] = moveKm(c.lng, c.lat, c.headingDeg, (c.speedKmh * offsetMin) / 60);
+        const I = envelope(c, this.t + offsetMin * 60000).I;
+        const p = this.probs.get(c.id);
+        return {
+          id: c.id,
+          lng,
+          lat,
+          maxDbz: clamp(18 + 47 * c.strength * I, 10, 70),
+          radiusKm: c.radiusKm,
+          severity: p ? severityOf(p, c) : ('green' as Severity),
+          stage: c.stage,
+          type: c.type,
+        };
+      })
+      .filter((c) => c.maxDbz > 22);
     return { t: this.t + offsetMin * 60000, offsetMin, dbz: g.field('dbz', this.t + offsetMin * 60000, fine), cells, kind: 'forecast' };
   }
 
@@ -803,7 +841,11 @@ export class World {
         this.load(this.sc.id);
         break;
       case 'sensorFail': {
-        const s = cmd.sensorId ? this.sensors.find((x) => x.id === cmd.sensorId) : this.sensors.filter((x) => x.kind === 'dwr').sort((a, b) => distanceKm(a.lng, a.lat, this.sc.center[0], this.sc.center[1]) - distanceKm(b.lng, b.lat, this.sc.center[0], this.sc.center[1]))[0];
+        const s = cmd.sensorId
+          ? this.sensors.find((x) => x.id === cmd.sensorId)
+          : this.sensors
+              .filter((x) => x.kind === 'dwr')
+              .sort((a, b) => distanceKm(a.lng, a.lat, this.sc.center[0], this.sc.center[1]) - distanceKm(b.lng, b.lat, this.sc.center[0], this.sc.center[1]))[0];
         if (s) {
           injectFault(s, cmd.anomaly, this.t, this.rng);
           this.pushEvent('director', `Director: injected ${cmd.anomaly} fault into ${s.name}`);
@@ -831,7 +873,7 @@ export class World {
         break;
       }
       case 'report': {
-        const r = verifyReport({ ...cmd.report, id: nextReportId() }, this.strikes, this.cells, this.reports);
+        const r = verifyReport({ ...cmd.report, id: `CR-${String(++this.reportSeq).padStart(4, '0')}` }, this.strikes, this.cells, this.reports);
         this.reports.push(r);
         this.pushEvent('report', `Citizen report ${r.id}: ${r.event} at ${r.place} -> ${r.status.toUpperCase()}`, r.status === 'verified' ? 'yellow' : undefined);
         return r;

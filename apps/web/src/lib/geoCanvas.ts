@@ -36,7 +36,14 @@ export function useGeo(url: string) {
   return g;
 }
 
-export function drawGeo(ctx: CanvasRenderingContext2D, geo: GeoLines, bbox: [number, number, number, number], W: number, H: number, style: { stroke: string; width: number; fill?: string }) {
+export function drawGeo(
+  ctx: CanvasRenderingContext2D,
+  geo: GeoLines,
+  bbox: [number, number, number, number],
+  W: number,
+  H: number,
+  style: { stroke: string; width: number; fill?: string },
+) {
   const [w, s, e, n] = bbox;
   ctx.save();
   ctx.strokeStyle = style.stroke;
@@ -44,10 +51,11 @@ export function drawGeo(ctx: CanvasRenderingContext2D, geo: GeoLines, bbox: [num
   if (style.fill) ctx.fillStyle = style.fill;
   for (const r of geo.rings) {
     let inView = false;
-    for (const [x, y] of r) if (x > w - 1 && x < e + 1 && y > s - 1 && y < n + 1) {
-      inView = true;
-      break;
-    }
+    for (const [x, y] of r)
+      if (x > w - 1 && x < e + 1 && y > s - 1 && y < n + 1) {
+        inView = true;
+        break;
+      }
     if (!inView) continue;
     ctx.beginPath();
     r.forEach(([x, y], i) => {

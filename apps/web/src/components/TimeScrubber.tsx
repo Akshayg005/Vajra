@@ -21,7 +21,11 @@ export function TimeScrubber() {
       </button>
       <div className="flex gap-0.5">
         {[1, 5, 20].map((v) => (
-          <button key={v} onClick={() => setSpeed(v)} className={`rounded px-1.5 py-0.5 font-mono text-[11px] ${speed === v ? 'bg-volt/20 text-volt' : 'text-slate-400 hover:bg-white/10'}`}>
+          <button
+            key={v}
+            onClick={() => setSpeed(v)}
+            className={`rounded px-1.5 py-0.5 font-mono text-[11px] ${speed === v ? 'bg-volt/20 text-volt' : 'text-slate-400 hover:bg-white/10'}`}
+          >
             {v}×
           </button>
         ))}

@@ -47,7 +47,9 @@ export const CTT = buildLut(
     [210, [170, 80, 230, 220]],
     [200, [240, 90, 190, 235]],
     [192, [255, 255, 255, 250]],
-  ].map(([v, c]) => [v, c] as Stop).reverse() as Stop[],
+  ]
+    .map(([v, c]) => [v, c] as Stop)
+    .reverse() as Stop[],
   190,
   305,
 );

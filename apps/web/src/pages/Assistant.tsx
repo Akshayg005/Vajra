@@ -20,7 +20,16 @@ interface Msg {
   source?: 'engine' | 'llm';
 }
 
-const SUGGEST = ['Will lightning hit Patna in the next hour?', 'कोलकाता में अगले 2 घंटे में आंधी आएगी?', 'Which storm is the most dangerous right now?', 'Advisory for farmers', 'Aviation advisory for Kolkata airport', 'বর্ধমানে কি বাজ পড়বে?', 'Hail risk in Nagpur in 90 minutes', 'Summary of the situation'];
+const SUGGEST = [
+  'Will lightning hit Patna in the next hour?',
+  'कोलकाता में अगले 2 घंटे में आंधी आएगी?',
+  'Which storm is the most dangerous right now?',
+  'Advisory for farmers',
+  'Aviation advisory for Kolkata airport',
+  'বর্ধমানে কি বাজ পড়বে?',
+  'Hail risk in Nagpur in 90 minutes',
+  'Summary of the situation',
+];
 let msgSeq = 1;
 
 export default function Assistant() {
@@ -28,7 +37,14 @@ export default function Assistant() {
   const adapter = useStore((s) => s.adapter);
   const llmOnline = useStore((s) => s.llmOnline);
   const [lang, setLang] = useState<Lang>('en');
-  const [msgs, setMsgs] = useState<Msg[]>([{ id: 0, role: 'bot', text: 'Namaste! I answer from the live VAJRA engine. Ask about a place, a time window and a hazard — in English, हिन्दी, मराठी, বাংলা, ଓଡ଼ିଆ, தமிழ், తెలుగు or ಕನ್ನಡ.', shown: 999 }]);
+  const [msgs, setMsgs] = useState<Msg[]>([
+    {
+      id: 0,
+      role: 'bot',
+      text: 'Namaste! I answer from the live VAJRA engine. Ask about a place, a time window and a hazard — in English, हिन्दी, मराठी, বাংলা, ଓଡ଼ିଆ, தமிழ், తెలుగు or ಕನ್ನಡ.',
+      shown: 999,
+    },
+  ]);
   const [input, setInput] = useState('');
   const [thinking, setThinking] = useState(false);
   const [listening, setListening] = useState(false);
@@ -87,7 +103,12 @@ export default function Assistant() {
       try {
         const ctl = new AbortController();
         const to = setTimeout(() => ctl.abort(), 6000);
-        const r = await fetch('/api/v1/assistant', { method: 'POST', signal: ctl.signal, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ question: clean, draft: reply.text.slice(0, 2000), lang: L }) });
+        const r = await fetch('/api/v1/assistant', {
+          method: 'POST',
+          signal: ctl.signal,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ question: clean, draft: reply.text.slice(0, 2000), lang: L }),
+        });
         clearTimeout(to);
         const j = AssistantOutSchema.safeParse(r.ok ? await r.json() : null);
         if (j.success && j.data.source === 'llm') reply = { ...reply, text: j.data.answer, source: 'llm' };
@@ -128,14 +149,25 @@ export default function Assistant() {
             <span className="chip">grounded in live engine state{llmOnline ? ' · LLM phrasing on' : ''}</span>
           </div>
           <div className="flex items-center gap-2">
-            <select value={lang} onChange={(e) => setLang(e.target.value as Lang)} className="rounded-md border border-white/10 bg-ink-800 px-2 py-1 text-sm" aria-label="Answer language">
+            <select
+              value={lang}
+              onChange={(e) => setLang(e.target.value as Lang)}
+              className="rounded-md border border-white/10 bg-ink-800 px-2 py-1 text-sm"
+              aria-label="Answer language"
+            >
               {LANGS.map((l) => (
                 <option key={l.code} value={l.code}>
                   {l.label}
                 </option>
               ))}
             </select>
-            <button className={`btn h-8 px-2 ${voiceOut ? 'text-volt' : ''}`} onClick={() => setVoiceOut(!voiceOut)} title={voiceOut ? 'Voice replies on' : 'Voice replies off'} aria-pressed={voiceOut} aria-label="Read answers aloud">
+            <button
+              className={`btn h-8 px-2 ${voiceOut ? 'text-volt' : ''}`}
+              onClick={() => setVoiceOut(!voiceOut)}
+              title={voiceOut ? 'Voice replies on' : 'Voice replies off'}
+              aria-pressed={voiceOut}
+              aria-label="Read answers aloud"
+            >
               {voiceOut ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
             </button>
           </div>
@@ -175,7 +207,11 @@ export default function Assistant() {
         <div className="border-t border-white/5 p-3">
           <div className="mb-2 flex flex-wrap gap-1">
             {SUGGEST.map((s) => (
-              <button key={s} onClick={() => void ask(s)} className="rounded-full border border-white/10 px-2.5 py-0.5 text-[12px] text-slate-300 hover:border-volt/50 hover:text-white">
+              <button
+                key={s}
+                onClick={() => void ask(s)}
+                className="rounded-full border border-white/10 px-2.5 py-0.5 text-[12px] text-slate-300 hover:border-volt/50 hover:text-white"
+              >
                 {s}
               </button>
             ))}
@@ -188,15 +224,33 @@ export default function Assistant() {
               setInput('');
             }}
           >
-            <button type="button" onClick={toggleMic} disabled={!Recognizer} title={Recognizer ? 'Voice input' : 'Voice input is not supported in this browser — please type'} aria-label="Voice input" className={`btn h-10 w-10 p-0 ${listening ? 'border-sev-red text-sev-red' : ''}`}>
+            <button
+              type="button"
+              onClick={toggleMic}
+              disabled={!Recognizer}
+              title={Recognizer ? 'Voice input' : 'Voice input is not supported in this browser — please type'}
+              aria-label="Voice input"
+              className={`btn h-10 w-10 p-0 ${listening ? 'border-sev-red text-sev-red' : ''}`}
+            >
               {Recognizer ? <Mic className={`h-4 w-4 ${listening ? 'animate-pulse' : ''}`} /> : <MicOff className="h-4 w-4" />}
             </button>
-            <input value={input} maxLength={300} onChange={(e) => setInput(e.target.value)} placeholder={listening ? 'Listening…' : 'Ask about storms, lightning, hail or advisories…'} aria-label="Question" className="h-10 flex-1 rounded-lg border border-white/10 bg-ink-800 px-3 text-sm outline-none focus:border-volt/60" />
+            <input
+              value={input}
+              maxLength={300}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder={listening ? 'Listening…' : 'Ask about storms, lightning, hail or advisories…'}
+              aria-label="Question"
+              className="h-10 flex-1 rounded-lg border border-white/10 bg-ink-800 px-3 text-sm outline-none focus:border-volt/60"
+            />
             <button type="submit" className="btn btn-primary h-10 px-4" aria-label="Send" disabled={thinking}>
               <Send className="h-4 w-4" />
             </button>
           </form>
-          {!Recognizer && <div className="mt-1 text-[12px] text-slate-400">Voice input is not available in this browser (works in Chrome and Edge). Typing works everywhere; answers can still be read aloud.</div>}
+          {!Recognizer && (
+            <div className="mt-1 text-[12px] text-slate-400">
+              Voice input is not available in this browser (works in Chrome and Edge). Typing works everywhere; answers can still be read aloud.
+            </div>
+          )}
         </div>
       </div>
       <SectorCards snap={snap} ask={(q) => void ask(q)} />
@@ -228,7 +282,8 @@ function SectorCards({ snap, ask }: { snap: WorldSnapshot; ask: (q: string) => v
       {worst && (
         <div className="panel p-3 text-[12px] text-slate-300">
           <div className="panel-title mb-1">Context the assistant sees</div>
-          {snap.cells.length} cells · {snap.stats.strikesLastMin} strikes/min · strongest {worst.id} {worst.maxDbz.toFixed(1)} dBZ · {liveAlerts(snap).length} live warnings · regime {snap.regime.label}
+          {snap.cells.length} cells · {snap.stats.strikesLastMin} strikes/min · strongest {worst.id} {worst.maxDbz.toFixed(1)} dBZ · {liveAlerts(snap).length} live warnings ·
+          regime {snap.regime.label}
         </div>
       )}
     </div>

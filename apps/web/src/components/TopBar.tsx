@@ -81,16 +81,32 @@ export function TopBar() {
           </>
         )}
         <div className="flex items-center gap-1 rounded-lg border border-white/10 bg-ink-800 p-1">
-          <button className="rounded-md p-1.5 hover:bg-white/10" onClick={() => setPlaying(!playing)} aria-label={playing ? 'Pause (Space)' : 'Play (Space)'} title={playing ? 'Pause (Space)' : 'Play (Space)'}>
+          <button
+            className="rounded-md p-1.5 hover:bg-white/10"
+            onClick={() => setPlaying(!playing)}
+            aria-label={playing ? 'Pause (Space)' : 'Play (Space)'}
+            title={playing ? 'Pause (Space)' : 'Play (Space)'}
+          >
             {playing ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
           </button>
           {[1, 5, 20].map((v) => (
-            <button key={v} onClick={() => setSpeed(v)} aria-pressed={speed === v} className={`rounded-md px-2 py-1 font-mono text-xs ${speed === v ? 'bg-volt/20 text-volt' : 'text-slate-400 hover:bg-white/10'}`}>
+            <button
+              key={v}
+              onClick={() => setSpeed(v)}
+              aria-pressed={speed === v}
+              className={`rounded-md px-2 py-1 font-mono text-xs ${speed === v ? 'bg-volt/20 text-volt' : 'text-slate-400 hover:bg-white/10'}`}
+            >
               {v}×
             </button>
           ))}
         </div>
-        <button className={`rounded-md p-1.5 ${projector ? 'bg-plasma/20 text-plasma-soft' : 'text-slate-400 hover:bg-white/10'}`} onClick={() => setProjector(!projector)} title="Projector mode (P): larger text" aria-pressed={projector} aria-label="Projector mode">
+        <button
+          className={`rounded-md p-1.5 ${projector ? 'bg-plasma/20 text-plasma-soft' : 'text-slate-400 hover:bg-white/10'}`}
+          onClick={() => setProjector(!projector)}
+          title="Projector mode (P): larger text"
+          aria-pressed={projector}
+          aria-label="Projector mode"
+        >
           <Monitor className="h-4 w-4" />
         </button>
         <div className="text-right">
@@ -115,8 +131,17 @@ function StatusChip() {
   const label = source === 'api' ? 'API engine' : source === 'api-lost' ? 'API lost → local engine' : source === 'worker-restarted' ? 'Engine auto-restarted' : 'Local engine';
   const warn = source === 'api-lost' || source === 'worker-restarted';
   return (
-    <span className={`chip hidden md:inline-flex ${warn ? 'border-sev-orange/50 text-sev-orange' : ''}`} title={`Data source: ${label}. API ${apiOnline ? 'online' : 'offline (optional)'}${llm ? ', LLM proxy on' : ''}. Seed ${seed}${locked ? ' (locked)' : ''}. Feed latency ${latency} ms, engine tick ${tickMs.toFixed(1)} ms.`}>
-      {source === 'worker-restarted' ? <RefreshCw className="h-3 w-3" /> : apiOnline ? <Cloud className="h-3 w-3 text-sev-green" /> : <CloudOff className="h-3 w-3 text-slate-400" />}
+    <span
+      className={`chip hidden md:inline-flex ${warn ? 'border-sev-orange/50 text-sev-orange' : ''}`}
+      title={`Data source: ${label}. API ${apiOnline ? 'online' : 'offline (optional)'}${llm ? ', LLM proxy on' : ''}. Seed ${seed}${locked ? ' (locked)' : ''}. Feed latency ${latency} ms, engine tick ${tickMs.toFixed(1)} ms.`}
+    >
+      {source === 'worker-restarted' ? (
+        <RefreshCw className="h-3 w-3" />
+      ) : apiOnline ? (
+        <Cloud className="h-3 w-3 text-sev-green" />
+      ) : (
+        <CloudOff className="h-3 w-3 text-slate-400" />
+      )}
       <span>{label}</span>
       <span className="text-slate-500">·</span>
       <span className="font-mono tnum">{latency} ms</span>

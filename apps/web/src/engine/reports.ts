@@ -5,7 +5,13 @@ import { distanceKm } from './geo';
 import { nearestTown } from './places';
 
 const TEXTS: Record<CitizenReport['event'], string[]> = {
-  lightning: ['Bijli giri khet ke paas', 'Lightning struck a palm tree near the pond', 'Very loud thunder, flashes every few seconds', 'বাজ পড়ল মাঠে', 'Lightning hit transformer, power gone'],
+  lightning: [
+    'Bijli giri khet ke paas',
+    'Lightning struck a palm tree near the pond',
+    'Very loud thunder, flashes every few seconds',
+    'বাজ পড়ল মাঠে',
+    'Lightning hit transformer, power gone',
+  ],
   hail: ['Ole pad rahe hain, chane jitne', 'Pea-size hail for 5 minutes', 'Hail damaged mango crop', 'ଶିଳାବୃଷ୍ଟି ହେଉଛି'],
   damage: ['Tree fell on the road, traffic stuck', 'Tin roofs blown off in the village', 'Hoarding collapsed near the market', 'Electric pole down'],
   waterlogging: ['Knee-deep water at the underpass', 'Road flooded near the station', 'Water entering houses in low area', 'Paani bhar gaya gali mein'],
@@ -19,15 +25,29 @@ const TEXTS: Record<CitizenReport['event'], string[]> = {
  *  waterlogging: >45 dBZ within 10 km in the last 30 min (proxy for >25 mm/h)
  * Duplicate: same event within 3 km and 15 min of an existing report. Fake: no supporting signal at all.
  */
-export function verifyReport(r: Omit<CitizenReport, 'status' | 'matchScore' | 'matchReason'>, strikes: LightningStrike[], cells: CellAgent[], existing: CitizenReport[]): CitizenReport {
+export function verifyReport(
+  r: Omit<CitizenReport, 'status' | 'matchScore' | 'matchReason'>,
+  strikes: LightningStrike[],
+  cells: CellAgent[],
+  existing: CitizenReport[],
+): CitizenReport {
   const dup = existing.find((e) => e.event === r.event && e.status !== 'fake' && distanceKm(e.lng, e.lat, r.lng, r.lat) < 3 && Math.abs(e.t - r.t) < 15 * 60000);
-  if (dup) return { ...r, status: 'duplicate', matchScore: dup.matchScore, matchReason: `Same ${r.event} as ${dup.id} (${distanceKm(dup.lng, dup.lat, r.lng, r.lat).toFixed(1)} km away)`, duplicateOf: dup.id };
+  if (dup)
+    return {
+      ...r,
+      status: 'duplicate',
+      matchScore: dup.matchScore,
+      matchReason: `Same ${r.event} as ${dup.id} (${distanceKm(dup.lng, dup.lat, r.lng, r.lat).toFixed(1)} km away)`,
+      duplicateOf: dup.id,
+    };
   let score = 0;
   let reason = '';
   if (r.event === 'lightning') {
     const near = strikes.filter((s) => Math.abs(s.t - r.t) < 15 * 60000 && distanceKm(s.lng, s.lat, r.lng, r.lat) < 10);
     score = Math.min(1, near.length / 4);
-    reason = near.length ? `${near.length} strikes within 10 km / 15 min (nearest ${Math.min(...near.map((s) => distanceKm(s.lng, s.lat, r.lng, r.lat))).toFixed(1)} km)` : 'No strikes detected within 10 km in ±15 min';
+    reason = near.length
+      ? `${near.length} strikes within 10 km / 15 min (nearest ${Math.min(...near.map((s) => distanceKm(s.lng, s.lat, r.lng, r.lat))).toFixed(1)} km)`
+      : 'No strikes detected within 10 km in ±15 min';
   } else {
     const radius = r.event === 'hail' ? 15 : r.event === 'damage' ? 20 : 10;
     const near = cells.filter((c) => distanceKm(c.lng, c.lat, r.lng, r.lat) < radius + c.radiusKm);
@@ -45,11 +65,19 @@ export function verifyReport(r: Omit<CitizenReport, 'status' | 'matchScore' | 'm
   return { ...r, status, matchScore: Math.round(score * 100) / 100, matchReason: reason };
 }
 
-let rid = 0;
 /** Crowd generator: most reports come from real storm impacts; ~12% are duplicates or noise/fake. */
-export function maybeCrowdReport(rng: Rng, t: number, cells: CellAgent[], strikes: LightningStrike[], existing: CitizenReport[], bbox: [number, number, number, number], ratePerMin: number, dtMin: number): CitizenReport | null {
+export function maybeCrowdReport(
+  rng: Rng,
+  t: number,
+  cells: CellAgent[],
+  strikes: LightningStrike[],
+  existing: CitizenReport[],
+  bbox: [number, number, number, number],
+  ratePerMin: number,
+  dtMin: number,
+  rid: number,
+): CitizenReport | null {
   if (!rng.chance(1 - Math.exp(-ratePerMin * dtMin))) return null;
-  rid++;
   let lng: number;
   let lat: number;
   let event: CitizenReport['event'];
@@ -91,12 +119,4 @@ export function maybeCrowdReport(rng: Rng, t: number, cells: CellAgent[], strike
     source: rng.pick(['app', 'whatsapp', 'sms'] as const),
   };
   return verifyReport(base, strikes, cells, existing);
-}
-
-export function nextReportId() {
-  rid++;
-  return `CR-${String(rid).padStart(4, '0')}`;
-}
-export function resetReportIds() {
-  rid = 0;
 }

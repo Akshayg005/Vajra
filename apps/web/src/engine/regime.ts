@@ -17,8 +17,7 @@ export function classifyRegime(sc: Scenario, meanPw: number, meanShear: number, 
   const m = sc.month;
   const steerFromNW = Math.cos(((sc.steeringDeg - 120) * Math.PI) / 180);
   const s: Record<RegimeId, number> = {
-    premonsoon_norwester:
-      (m >= 3 && m <= 5 ? 2.2 : -1) + (lng > 83 ? 1.1 : -0.6) + steerFromNW * 0.9 + (meanCape > 2500 ? 0.8 : 0) + (hourIST > 13 && hourIST < 20 ? 0.4 : 0),
+    premonsoon_norwester: (m >= 3 && m <= 5 ? 2.2 : -1) + (lng > 83 ? 1.1 : -0.6) + steerFromNW * 0.9 + (meanCape > 2500 ? 0.8 : 0) + (hourIST > 13 && hourIST < 20 ? 0.4 : 0),
     monsoon_convection: (m >= 6 && m <= 9 ? 2.3 : -1) + (meanPw > 55 ? 1.3 : -0.4) + (meanShear < 11 ? 0.6 : -0.3),
     western_disturbance: (m <= 3 || m === 12 ? 2 : -0.8) + (lat > 28 ? 0.9 : -0.8) + (sc.steeringDeg > 60 && sc.steeringDeg < 120 ? 0.4 : 0),
     postmonsoon_nem: (m >= 10 && m <= 12 ? 2.2 : -1.2) + (lat < 16 ? 1.2 : -0.7),
@@ -32,7 +31,9 @@ export function classifyRegime(sc: Scenario, meanPw: number, meanShear: number, 
   keys.forEach((k, i) => (scores[k] = ex[i] / tot));
   const regime = keys.reduce((a, b) => (scores[a] > scores[b] ? a : b));
   const drivers: string[] = [];
-  drivers.push(`Month ${m}: ${['', 'winter', 'winter', 'pre-monsoon', 'pre-monsoon', 'pre-monsoon', 'monsoon', 'monsoon', 'monsoon', 'monsoon', 'post-monsoon', 'post-monsoon', 'winter'][m]}`);
+  drivers.push(
+    `Month ${m}: ${['', 'winter', 'winter', 'pre-monsoon', 'pre-monsoon', 'pre-monsoon', 'monsoon', 'monsoon', 'monsoon', 'monsoon', 'post-monsoon', 'post-monsoon', 'winter'][m]}`,
+  );
   drivers.push(`Mean PW ${meanPw.toFixed(0)} mm, 0-6 km shear ${meanShear.toFixed(0)} m/s`);
   drivers.push(`Mean CAPE ${Math.round(meanCape)} J/kg, steering to ${Math.round(sc.steeringDeg)} deg`);
   // never claim certainty: cap at 97%

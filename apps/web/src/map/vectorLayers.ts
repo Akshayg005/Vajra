@@ -84,7 +84,15 @@ export function alertLayer(alerts: Alert[], pulse: number, opacity: number): Lay
   });
 }
 
-export function strikeLayers(strikes: LightningStrike[], flashing: LightningStrike[], seen: Map<number, number>, simNow: number, strikeTick: number, now: number, opacity: number): Layer[] {
+export function strikeLayers(
+  strikes: LightningStrike[],
+  flashing: LightningStrike[],
+  seen: Map<number, number>,
+  simNow: number,
+  strikeTick: number,
+  now: number,
+  opacity: number,
+): Layer[] {
   return [
     new ScatterplotLayer<LightningStrike>({
       id: 'strikes',
@@ -142,7 +150,17 @@ export function cityLayers(bbox: [number, number, number, number], opacity: numb
   const minPop = zoom < 6.5 ? 900000 : zoom < 7.5 ? 250000 : 60000;
   const towns = TOWNS.filter((t) => t.lng > w - 1 && t.lng < e + 1 && t.lat > s - 1 && t.lat < n + 1 && t.pop >= minPop);
   return [
-    new ScatterplotLayer<Town>({ id: 'cities', data: towns, opacity, pickable: true, getPosition: (t) => [t.lng, t.lat], getRadius: (t) => (t.pop > 1e6 ? 3.5 : 2.5), radiusUnits: 'pixels', getFillColor: [226, 232, 240, 220], updateTriggers: { getRadius: minPop } }),
+    new ScatterplotLayer<Town>({
+      id: 'cities',
+      data: towns,
+      opacity,
+      pickable: true,
+      getPosition: (t) => [t.lng, t.lat],
+      getRadius: (t) => (t.pop > 1e6 ? 3.5 : 2.5),
+      radiusUnits: 'pixels',
+      getFillColor: [226, 232, 240, 220],
+      updateTriggers: { getRadius: minPop },
+    }),
     new TextLayer<Town>({
       id: 'city-labels',
       data: towns,
@@ -170,19 +188,73 @@ export function assetLayers(bbox: [number, number, number, number], opacity: num
   const [w, s, e, n] = bbox;
   const assets = INFRA.filter((a) => a.lng > w - 0.5 && a.lng < e + 0.5 && a.lat > s - 0.5 && a.lat < n + 0.5);
   return [
-    new ScatterplotLayer<Infra>({ id: 'assets', data: assets, opacity, pickable: true, getPosition: (a) => [a.lng, a.lat], getRadius: 9, radiusUnits: 'pixels', getFillColor: [15, 23, 42, 230], getLineColor: [250, 204, 21, 230], stroked: true, getLineWidth: 1.5, lineWidthUnits: 'pixels' }),
-    new TextLayer<Infra>({ id: 'asset-glyphs', data: assets, opacity, getPosition: (a) => [a.lng, a.lat], getText: (a) => ASSET_GLYPH[a.kind], getSize: 12, getColor: [250, 204, 21, 255], fontFamily: 'Inter, sans-serif', characterSet: Object.values(ASSET_GLYPH).join('') }),
+    new ScatterplotLayer<Infra>({
+      id: 'assets',
+      data: assets,
+      opacity,
+      pickable: true,
+      getPosition: (a) => [a.lng, a.lat],
+      getRadius: 9,
+      radiusUnits: 'pixels',
+      getFillColor: [15, 23, 42, 230],
+      getLineColor: [250, 204, 21, 230],
+      stroked: true,
+      getLineWidth: 1.5,
+      lineWidthUnits: 'pixels',
+    }),
+    new TextLayer<Infra>({
+      id: 'asset-glyphs',
+      data: assets,
+      opacity,
+      getPosition: (a) => [a.lng, a.lat],
+      getText: (a) => ASSET_GLYPH[a.kind],
+      getSize: 12,
+      getColor: [250, 204, 21, 255],
+      fontFamily: 'Inter, sans-serif',
+      characterSet: Object.values(ASSET_GLYPH).join(''),
+    }),
   ];
 }
 
 export function trackLayers(cells: StormCell[], selected: string | null, opacity: number): Layer[] {
   return [
-    new PolygonLayer<StormCell>({ id: 'cones', data: cells.filter((c) => c.forecastTrack.length > 1 && c.maxDbz > 35), opacity, getPolygon: coneFor, getFillColor: (c) => (c.id === selected ? [167, 139, 250, 70] : [167, 139, 250, 30]), getLineColor: [196, 181, 253, 140], getLineWidth: 1, lineWidthUnits: 'pixels', stroked: true, updateTriggers: { getFillColor: selected } }),
-    new PathLayer<StormCell>({ id: 'past', data: cells.filter((c) => c.track.length > 1), opacity, getPath: (c) => [...c.track.map((p) => [p.lng, p.lat] as [number, number]), [c.lng, c.lat] as [number, number]], getColor: [226, 232, 240, 170], getWidth: 2, widthUnits: 'pixels', capRounded: true, jointRounded: true }),
+    new PolygonLayer<StormCell>({
+      id: 'cones',
+      data: cells.filter((c) => c.forecastTrack.length > 1 && c.maxDbz > 35),
+      opacity,
+      getPolygon: coneFor,
+      getFillColor: (c) => (c.id === selected ? [167, 139, 250, 70] : [167, 139, 250, 30]),
+      getLineColor: [196, 181, 253, 140],
+      getLineWidth: 1,
+      lineWidthUnits: 'pixels',
+      stroked: true,
+      updateTriggers: { getFillColor: selected },
+    }),
+    new PathLayer<StormCell>({
+      id: 'past',
+      data: cells.filter((c) => c.track.length > 1),
+      opacity,
+      getPath: (c) => [...c.track.map((p) => [p.lng, p.lat] as [number, number]), [c.lng, c.lat] as [number, number]],
+      getColor: [226, 232, 240, 170],
+      getWidth: 2,
+      widthUnits: 'pixels',
+      capRounded: true,
+      jointRounded: true,
+    }),
   ];
 }
 
-export function cellLayers(cellData: CellLite[], jumps: StormCell[], selected: string | null, pulse: number, now: number, tick: number, pickable: boolean, compact: boolean, opacity: number): Layer[] {
+export function cellLayers(
+  cellData: CellLite[],
+  jumps: StormCell[],
+  selected: string | null,
+  pulse: number,
+  now: number,
+  tick: number,
+  pickable: boolean,
+  compact: boolean,
+  opacity: number,
+): Layer[] {
   const out: Layer[] = [
     new ScatterplotLayer<CellLite>({
       id: 'cells',
@@ -219,7 +291,20 @@ export function cellLayers(cellData: CellLite[], jumps: StormCell[], selected: s
   ];
   if (jumps.length)
     out.push(
-      new ScatterplotLayer<StormCell>({ id: 'jump-ring', data: jumps, opacity, getPosition: (c) => [c.lng, c.lat], getRadius: (c) => c.radiusKm * 1000 * (1.6 + ((now / 1400) % 1) * 1.6), radiusUnits: 'meters', stroked: true, filled: false, getLineColor: [34, 211, 238, 255 * (1 - ((now / 1400) % 1))], getLineWidth: 2, lineWidthUnits: 'pixels', updateTriggers: { getRadius: now, getLineColor: now } }),
+      new ScatterplotLayer<StormCell>({
+        id: 'jump-ring',
+        data: jumps,
+        opacity,
+        getPosition: (c) => [c.lng, c.lat],
+        getRadius: (c) => c.radiusKm * 1000 * (1.6 + ((now / 1400) % 1) * 1.6),
+        radiusUnits: 'meters',
+        stroked: true,
+        filled: false,
+        getLineColor: [34, 211, 238, 255 * (1 - ((now / 1400) % 1))],
+        getLineWidth: 2,
+        lineWidthUnits: 'pixels',
+        updateTriggers: { getRadius: now, getLineColor: now },
+      }),
     );
   return out;
 }

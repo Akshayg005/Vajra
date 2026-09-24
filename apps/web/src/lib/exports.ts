@@ -11,7 +11,29 @@ const csvCell = (v: string | number) => {
 
 /** Excel-friendly CSV (UTF-8 BOM so Indic names open correctly). */
 export function alertsCsv(alerts: Alert[]): string {
-  const head = ['id', 'status', 'severity', 'hazard', 'issued_ist', 'updated_ist', 'expires_ist', 'state', 'district', 'areas', 'probability_pct', 'eta_min', 'population', 'farmers_in_field', 'schools_in_session', 'airports', 'sms_delivered', 'whatsapp_delivered', 'suppressed_repeats', 'merged_from', 'issued_by'];
+  const head = [
+    'id',
+    'status',
+    'severity',
+    'hazard',
+    'issued_ist',
+    'updated_ist',
+    'expires_ist',
+    'state',
+    'district',
+    'areas',
+    'probability_pct',
+    'eta_min',
+    'population',
+    'farmers_in_field',
+    'schools_in_session',
+    'airports',
+    'sms_delivered',
+    'whatsapp_delivered',
+    'suppressed_repeats',
+    'merged_from',
+    'issued_by',
+  ];
   const rows = alerts.map((a) => [
     a.id,
     a.status,

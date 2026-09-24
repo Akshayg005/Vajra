@@ -1,7 +1,26 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
-import { Anchor, Briefcase, Car, CloudLightning, GraduationCap, HardHat, Home, LocateFixed, MapPin, Plane, Search, Share2, ShieldCheck, Siren, Tent, Timer, Tractor, Zap } from 'lucide-react';
+import {
+  Anchor,
+  Briefcase,
+  Car,
+  CloudLightning,
+  GraduationCap,
+  HardHat,
+  Home,
+  LocateFixed,
+  MapPin,
+  Plane,
+  Search,
+  Share2,
+  ShieldCheck,
+  Siren,
+  Tent,
+  Timer,
+  Tractor,
+  Zap,
+} from 'lucide-react';
 import type { PointNowcast, Severity } from '@vajra/contracts';
 import { useStore } from '../store';
 import i18n, { LANGS, type Dict } from '../i18n';
@@ -37,14 +56,15 @@ export default function CitizenView() {
   const [persona, setPersona] = useState<(typeof PERSONAS)[number]['k']>('farmer');
   const [pn, setPn] = useState<PointNowcast | null>(null);
   const now = useSimNow(1000);
+  const bboxKey = snap.scenario.bbox.join(',');
   const towns = useMemo(() => {
-    const [w, s, e, n] = snap.scenario.bbox;
+    const [w, s, e, n] = bboxKey.split(',').map(Number);
     return TOWNS.filter((x) => x.lng > w && x.lng < e && x.lat > s && x.lat < n);
-  }, [snap.scenario.id]);
+  }, [bboxKey]);
   const places: Place[] = useMemo(() => {
-    const [w, s, e, n] = snap.scenario.bbox;
+    const [w, s, e, n] = bboxKey.split(',').map(Number);
     return [...towns, ...DISTRICTS.filter((d) => d.lng > w && d.lng < e && d.lat > s && d.lat < n).map((d) => ({ name: `${d.name} (district)`, lng: d.lng, lat: d.lat }))];
-  }, [towns, snap.scenario.id]);
+  }, [towns, bboxKey]);
 
   useEffect(() => void i18n.changeLanguage(lang), [lang]);
   // initial place: ?place= or the town most at risk (nearest to the strongest storm's 30-min position)
@@ -54,7 +74,7 @@ export default function CitizenView() {
     if (byName) return setHere(byName);
     const c = [...snap.cells].sort((a, b) => b.maxDbz - a.maxDbz)[0];
     const f = c?.forecastTrack[2] ?? c;
-    setHere(f ? [...towns].sort((a, b) => distanceKm(a.lng, a.lat, f.lng, f.lat) - distanceKm(b.lng, b.lat, f.lng, f.lat))[0] ?? null : towns[0] ?? null);
+    setHere(f ? ([...towns].sort((a, b) => distanceKm(a.lng, a.lat, f.lng, f.lat) - distanceKm(b.lng, b.lat, f.lng, f.lat))[0] ?? null) : (towns[0] ?? null));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [snap.scenario.id]);
   useEffect(() => {
@@ -83,17 +103,32 @@ export default function CitizenView() {
   const sinceMin = lastNear !== null ? (now - lastNear) / 60000 : null;
   const p = pn?.probability ?? 0;
   const etaMs = pn?.etaMin != null ? pn.etaMin * 60000 - (now - snap.stats.simTime) : null;
-  const status: 'safe' | 'caution' | 'danger' = (sinceMin !== null && sinceMin < 30) || p >= 0.6 || (etaMs !== null && etaMs <= 15 * 60000) ? 'danger' : p >= 0.25 ? 'caution' : 'safe';
+  const status: 'safe' | 'caution' | 'danger' =
+    (sinceMin !== null && sinceMin < 30) || p >= 0.6 || (etaMs !== null && etaMs <= 15 * 60000) ? 'danger' : p >= 0.25 ? 'caution' : 'safe';
   const color = status === 'danger' ? '#ef4444' : status === 'caution' ? '#fb923c' : '#22c55e';
   const sev: Severity = status === 'danger' ? 'red' : status === 'caution' ? 'orange' : 'green';
   const there = towns.find((x) => x.name === dest) ?? towns.find((x) => x.name !== here?.name);
-  const commute = useMemo(() => (here && there ? planCommute(here, there, snap.cells) : null), [here, there, snap.stats.tick]);
-  const shelters = here ? [0, 1, 2].map((k) => ({ name: `${SHELTERS_PER_TOWN[(here.name.length + k * 2) % SHELTERS_PER_TOWN.length]}, ${here.name.split(' (')[0]}`, m: 180 + ((here.name.charCodeAt(0) * (k + 3)) % 600) })) : [];
+  const cells = snap.cells;
+  const commute = useMemo(() => (here && there ? planCommute(here, there, cells) : null), [here, there, cells]);
+  const shelters = here
+    ? [0, 1, 2].map((k) => ({
+        name: `${SHELTERS_PER_TOWN[(here.name.length + k * 2) % SHELTERS_PER_TOWN.length]}, ${here.name.split(' (')[0]}`,
+        m: 180 + ((here.name.charCodeAt(0) * (k + 3)) % 600),
+      }))
+    : [];
   const adv = t(PERSONAS.find((x) => x.k === persona)!.adv);
   const countdown = etaMs !== null && etaMs > 0 ? `${Math.floor(etaMs / 60000)}:${String(Math.floor((etaMs % 60000) / 1000)).padStart(2, '0')}` : null;
 
   const share = async () => {
-    const blob = await renderShareCard({ place: here?.name ?? '', status: t(status), risk: `${t('riskNext60')}: ${(p * 100).toFixed(0)}%`, eta: pn?.etaMin != null ? `${t('arrivesIn')}: ${pn.etaMin} ${t('min')}` : null, advice: adv, footer: `${fmtIST(now)} IST · VAJRA nowcast (prototype)`, color });
+    const blob = await renderShareCard({
+      place: here?.name ?? '',
+      status: t(status),
+      risk: `${t('riskNext60')}: ${(p * 100).toFixed(0)}%`,
+      eta: pn?.etaMin != null ? `${t('arrivesIn')}: ${pn.etaMin} ${t('min')}` : null,
+      advice: adv,
+      footer: `${fmtIST(now)} IST · VAJRA nowcast (prototype)`,
+      color,
+    });
     await shareOrDownload(blob);
   };
 
@@ -150,7 +185,12 @@ export default function CitizenView() {
         </div>
         {note && <div className="rounded-lg bg-sev-yellow/10 px-3 py-1.5 text-xs text-sev-yellow">{note}</div>}
 
-        <motion.div layout className="relative overflow-hidden rounded-2xl border p-5" style={{ borderColor: color + '80', background: `radial-gradient(120% 90% at 0% 0%, ${color}33, transparent 60%), #0b1120` }} aria-live="polite">
+        <motion.div
+          layout
+          className="relative overflow-hidden rounded-2xl border p-5"
+          style={{ borderColor: color + '80', background: `radial-gradient(120% 90% at 0% 0%, ${color}33, transparent 60%), #0b1120` }}
+          aria-live="polite"
+        >
           {status === 'danger' && <div className="absolute right-4 top-4 h-3 w-3 animate-ping rounded-full bg-sev-red" />}
           <div className="flex items-center gap-2 text-sm font-semibold" style={{ color }}>
             {status === 'danger' ? <Siren className="h-5 w-5" /> : status === 'caution' ? <CloudLightning className="h-5 w-5" /> : <ShieldCheck className="h-5 w-5" />}
@@ -196,14 +236,29 @@ export default function CitizenView() {
             <div className="relative h-16 w-16 shrink-0">
               <svg viewBox="0 0 36 36" className="h-16 w-16 -rotate-90" aria-hidden>
                 <circle cx="18" cy="18" r="15.5" fill="none" stroke="#1e293b" strokeWidth="3" />
-                <circle cx="18" cy="18" r="15.5" fill="none" stroke={sinceMin !== null && sinceMin < 30 ? '#ef4444' : '#22c55e'} strokeWidth="3" strokeDasharray={`${Math.min(1, (sinceMin ?? 30) / 30) * 97.4} 97.4`} strokeLinecap="round" />
+                <circle
+                  cx="18"
+                  cy="18"
+                  r="15.5"
+                  fill="none"
+                  stroke={sinceMin !== null && sinceMin < 30 ? '#ef4444' : '#22c55e'}
+                  strokeWidth="3"
+                  strokeDasharray={`${Math.min(1, (sinceMin ?? 30) / 30) * 97.4} 97.4`}
+                  strokeLinecap="round"
+                />
               </svg>
-              <div className="absolute inset-0 grid place-items-center font-mono text-sm font-bold text-white">{sinceMin !== null && sinceMin < 30 ? Math.ceil(30 - sinceMin) : '✓'}</div>
+              <div className="absolute inset-0 grid place-items-center font-mono text-sm font-bold text-white">
+                {sinceMin !== null && sinceMin < 30 ? Math.ceil(30 - sinceMin) : '✓'}
+              </div>
             </div>
             <div className="text-sm text-slate-300">
               {sinceMin !== null && sinceMin < 30 ? (
                 <>
-                  {t('lastThunder')}: <b className="font-mono text-white">{sinceMin.toFixed(1)} {t('min')}</b>. {t('stayInside', { n: Math.ceil(30 - sinceMin) })}
+                  {t('lastThunder')}:{' '}
+                  <b className="font-mono text-white">
+                    {sinceMin.toFixed(1)} {t('min')}
+                  </b>
+                  . {t('stayInside', { n: Math.ceil(30 - sinceMin) })}
                 </>
               ) : (
                 t('clear30')
@@ -230,7 +285,13 @@ export default function CitizenView() {
           <div className="text-sm font-semibold text-white">{t('persona')}</div>
           <div className="mt-2 grid grid-cols-4 gap-1.5" role="tablist">
             {PERSONAS.map(({ k, Icon }) => (
-              <button key={k} role="tab" aria-selected={persona === k} onClick={() => setPersona(k)} className={`flex flex-col items-center gap-1 rounded-xl border px-1 py-2 text-[11px] ${persona === k ? 'border-volt/60 bg-volt/15 text-white' : 'border-white/10 text-slate-400'}`}>
+              <button
+                key={k}
+                role="tab"
+                aria-selected={persona === k}
+                onClick={() => setPersona(k)}
+                className={`flex flex-col items-center gap-1 rounded-xl border px-1 py-2 text-[11px] ${persona === k ? 'border-volt/60 bg-volt/15 text-white' : 'border-white/10 text-slate-400'}`}
+              >
                 <Icon className="h-5 w-5" />
                 {t(k)}
               </button>
@@ -247,7 +308,12 @@ export default function CitizenView() {
           </div>
           <div className="mt-2 flex items-center gap-2 text-sm">
             <span className="truncate text-slate-400">{here?.name.split(' (')[0]} →</span>
-            <select value={there?.name ?? ''} onChange={(e) => setDest(e.target.value)} className="min-w-0 flex-1 rounded-lg border border-white/10 bg-ink-900 px-2 py-1.5" aria-label="Destination">
+            <select
+              value={there?.name ?? ''}
+              onChange={(e) => setDest(e.target.value)}
+              className="min-w-0 flex-1 rounded-lg border border-white/10 bg-ink-900 px-2 py-1.5"
+              aria-label="Destination"
+            >
               {towns
                 .filter((x) => x.name !== here?.name)
                 .map((x) => (

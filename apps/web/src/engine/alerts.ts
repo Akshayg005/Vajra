@@ -92,7 +92,16 @@ function initDelivery(pop: number): DeliveryCounter[] {
   const phones = pop * 0.82;
   return CHANNELS.map((ch) => ({
     channel: ch,
-    target: ch === 'sms' ? Math.round(phones) : ch === 'whatsapp' ? Math.round(phones * 0.46) : ch === 'push' ? Math.round(phones * 0.12) : ch === 'siren' ? Math.max(1, Math.round(pop / 90000)) : 1,
+    target:
+      ch === 'sms'
+        ? Math.round(phones)
+        : ch === 'whatsapp'
+          ? Math.round(phones * 0.46)
+          : ch === 'push'
+            ? Math.round(phones * 0.12)
+            : ch === 'siren'
+              ? Math.max(1, Math.round(pop / 90000))
+              : 1,
     sent: 0,
     delivered: 0,
     failed: 0,
@@ -119,11 +128,7 @@ function h32(str: string) {
   return h >>> 0;
 }
 
-const OPEN = [
-  (v: string) => `${v} is very likely`,
-  (v: string) => `Expect ${v}`,
-  (v: string) => `${v} is forecast`,
-];
+const OPEN = [(v: string) => `${v} is very likely`, (v: string) => `Expect ${v}`, (v: string) => `${v} is forecast`];
 const ACTION = [
   'Stay indoors, keep away from open fields, lone trees and water bodies; follow the 30-30 rule. Farmers: stop field work now.',
   'Move into a pucca building now. Do not shelter under trees or near electric poles. Wait 30 minutes after the last thunder.',
@@ -155,7 +160,7 @@ export function buildBulletin(a: Omit<Alert, 'bulletin'>, c: CellAgent, t: numbe
   return lines.join('\n');
 }
 
-export const compass = (deg: number) => ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'][Math.round(((deg % 360) / 22.5)) % 16];
+export const compass = (deg: number) => ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'][Math.round((deg % 360) / 22.5) % 16];
 export const fmtN = (n: number) => (n >= 1e6 ? `${(n / 1e6).toFixed(1)}M` : n >= 1e3 ? `${(n / 1e3).toFixed(1)}k` : `${n}`);
 
 /**
@@ -170,7 +175,15 @@ export class AlertManager {
   private seq = 0;
   private lastIssue = new Map<string, { t: number; sev: Severity }>();
 
-  step(cells: CellAgent[], probs: Map<string, MultiTaskProbs>, sc: Scenario, t: number, dtSec: number, rng: Rng, onEvent: (text: string, sev: Severity, cellId: string, kind: 'alert' | 'alert_update') => void) {
+  step(
+    cells: CellAgent[],
+    probs: Map<string, MultiTaskProbs>,
+    sc: Scenario,
+    t: number,
+    dtSec: number,
+    rng: Rng,
+    onEvent: (text: string, sev: Severity, cellId: string, kind: 'alert' | 'alert_update') => void,
+  ) {
     for (const c of cells) {
       const p = probs.get(c.id);
       if (!p || c.dead) continue;
@@ -198,7 +211,12 @@ export class AlertManager {
         if (!inIndia(c.lng, c.lat) && !inIndia(ahead[0], ahead[1])) continue;
         // fatigue guard: merge into an overlapping alert
         const cen = centroid(poly);
-        const host = this.alerts.find((x) => (x.status === 'active' || x.status === 'updated' || x.status === 'draft') && SEV_RANK[x.severity] >= SEV_RANK[sev] && pointInPolygon(cen[0], cen[1], x.polygon as [number, number][]));
+        const host = this.alerts.find(
+          (x) =>
+            (x.status === 'active' || x.status === 'updated' || x.status === 'draft') &&
+            SEV_RANK[x.severity] >= SEV_RANK[sev] &&
+            pointInPolygon(cen[0], cen[1], x.polygon as [number, number][]),
+        );
         if (host) {
           if (!host.mergedFrom.includes(c.id)) {
             host.mergedFrom.push(c.id);
@@ -213,7 +231,14 @@ export class AlertManager {
         a = this.create(c, p, sev, poly, sc, t, rng);
         this.alerts.push(a);
         this.lastIssue.set(c.id, { t, sev });
-        onEvent(a.status === 'draft' ? `${sev.toUpperCase()} warning ${a.id} drafted for ${a.district} — awaiting forecaster (auto-issues in 3 min)` : `${sev.toUpperCase()} alert ${a.id} auto-issued for ${a.district}: ${a.headline}`, sev, c.id, 'alert');
+        onEvent(
+          a.status === 'draft'
+            ? `${sev.toUpperCase()} warning ${a.id} drafted for ${a.district} — awaiting forecaster (auto-issues in 3 min)`
+            : `${sev.toUpperCase()} alert ${a.id} auto-issued for ${a.district}: ${a.headline}`,
+          sev,
+          c.id,
+          'alert',
+        );
       } else {
         const up = SEV_RANK[sev] > SEV_RANK[a.severity];
         const down = SEV_RANK[sev] < SEV_RANK[a.severity];
@@ -257,7 +282,11 @@ export class AlertManager {
       }
     }
     // keep memory flat: keep last 40
-    if (this.alerts.length > 40) this.alerts = this.alerts.filter((a) => a.status !== 'expired').concat(this.alerts.filter((a) => a.status === 'expired').slice(-10)).slice(-40);
+    if (this.alerts.length > 40)
+      this.alerts = this.alerts
+        .filter((a) => a.status !== 'expired')
+        .concat(this.alerts.filter((a) => a.status === 'expired').slice(-10))
+        .slice(-40);
   }
 
   /** forecaster actions (Alert Center) */
@@ -305,7 +334,9 @@ export class AlertManager {
     a.updatedAt = t;
     a.impact = estimateImpact(a.id, ring, sc, t, rng);
     const scale = a.impact.population * 0.82;
-    for (const d of a.delivery) if (d.channel === 'sms' || d.channel === 'whatsapp' || d.channel === 'push') d.target = Math.max(d.sent, Math.round(scale * (d.channel === 'sms' ? 1 : d.channel === 'whatsapp' ? 0.46 : 0.12)));
+    for (const d of a.delivery)
+      if (d.channel === 'sms' || d.channel === 'whatsapp' || d.channel === 'push')
+        d.target = Math.max(d.sent, Math.round(scale * (d.channel === 'sms' ? 1 : d.channel === 'whatsapp' ? 0.46 : 0.12)));
     return a;
   }
 
@@ -319,9 +350,19 @@ export class AlertManager {
       { level: 'state', name: bp.state },
       ...(districts.length ? districts : [{ name: bp.district, state: bp.state }]).map((d) => ({ level: 'district' as const, name: d.name })),
       { level: 'block', name: bp.block },
-      ...[...new Set([bp.panchayat, blockAndPanchayat(cen[0] + 0.07, cen[1] - 0.05).panchayat, blockAndPanchayat(cen[0] - 0.09, cen[1] + 0.04).panchayat])].slice(0, 2).map((name) => ({ level: 'panchayat' as const, name })),
+      ...[...new Set([bp.panchayat, blockAndPanchayat(cen[0] + 0.07, cen[1] - 0.05).panchayat, blockAndPanchayat(cen[0] - 0.09, cen[1] + 0.04).panchayat])]
+        .slice(0, 2)
+        .map((name) => ({ level: 'panchayat' as const, name })),
     ];
-    const hazard: Alert['hazard'] = c.hail ? 'hail' : c.type === 'squall' || c.downburst ? 'squall' : c.flashRate > 8 ? 'lightning' : p.heavyRain > 0.75 && sc.pw > 55 ? 'heavy_rain' : 'thunderstorm';
+    const hazard: Alert['hazard'] = c.hail
+      ? 'hail'
+      : c.type === 'squall' || c.downburst
+        ? 'squall'
+        : c.flashRate > 8
+          ? 'lightning'
+          : p.heavyRain > 0.75 && sc.pw > 55
+            ? 'heavy_rain'
+            : 'thunderstorm';
     const impact = estimateImpact(id, poly, sc, t, rng);
     const base: Omit<Alert, 'bulletin'> = {
       id,
@@ -351,7 +392,13 @@ export class AlertManager {
 }
 
 export function hazardText(h: Alert['hazard']) {
-  return { thunderstorm: 'Thunderstorm & lightning', lightning: 'Frequent lightning', hail: 'Hailstorm', squall: 'Squall / Kalbaisakhi winds', heavy_rain: 'Intense rain & lightning' }[h];
+  return {
+    thunderstorm: 'Thunderstorm & lightning',
+    lightning: 'Frequent lightning',
+    hail: 'Hailstorm',
+    squall: 'Squall / Kalbaisakhi winds',
+    heavy_rain: 'Intense rain & lightning',
+  }[h];
 }
 
 export function centroid(poly: LngLat[]): LngLat {

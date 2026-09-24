@@ -44,7 +44,9 @@ export default function App() {
       adapter = local;
       useStore.getState().setAdapter(local);
       useStore.getState().setSource(why);
-      await local.start({ scenarioId: useStore.getState().snap?.scenario.id ?? scenarioId, seed, locked, speed: useStore.getState().speed, paused: false }, onSnap, (s) => useStore.getState().setSource(s));
+      await local.start({ scenarioId: useStore.getState().snap?.scenario.id ?? scenarioId, seed, locked, speed: useStore.getState().speed, paused: false }, onSnap, (s) =>
+        useStore.getState().setSource(s),
+      );
     };
     void chooseAdapter().then(async (a) => {
       if (stopped) return;
@@ -117,7 +119,10 @@ export default function App() {
 
   return (
     <div className="flex h-full w-full flex-col bg-ink-950 text-slate-100">
-      <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-[70] focus:rounded focus:bg-volt focus:px-3 focus:py-1 focus:text-ink-950">
+      <a
+        href="#main"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-[70] focus:rounded focus:bg-volt focus:px-3 focus:py-1 focus:text-ink-950"
+      >
         Skip to content
       </a>
       <TopBar />

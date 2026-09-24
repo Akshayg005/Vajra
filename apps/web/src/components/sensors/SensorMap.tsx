@@ -2,12 +2,13 @@ import { useEffect, useRef } from 'react';
 import type { SensorStatus } from '@vajra/contracts';
 import { drawGeo, useGeo } from '../../lib/geoCanvas';
 
+const bbox: [number, number, number, number] = [67, 6, 98, 37.5];
+
 /** Network map: India (SoI outline + states), DWR 250 km rings, and every sensor coloured by state. */
 export function SensorMap({ sensors, focus }: { sensors: SensorStatus[]; focus: [number, number, number, number] }) {
   const ref = useRef<HTMLCanvasElement>(null);
   const outline = useGeo('/geo/india-outline.geojson');
   const states = useGeo('/geo/india-states.geojson');
-  const bbox: [number, number, number, number] = [67, 6, 98, 37.5];
   useEffect(() => {
     const c = ref.current;
     if (!c) return;

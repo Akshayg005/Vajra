@@ -71,7 +71,11 @@ export default function AlertCenter() {
               })}
             </div>
           </div>
-          {a ? <AlertDetail a={a} others={liveList.filter((x) => x.id !== a.id)} onPrint={(lang) => setPrint({ id: a.id, lang })} /> : <div className="panel p-6 text-slate-500">No warnings yet. They are created automatically when a storm crosses the thresholds.</div>}
+          {a ? (
+            <AlertDetail a={a} others={liveList.filter((x) => x.id !== a.id)} onPrint={(lang) => setPrint({ id: a.id, lang })} />
+          ) : (
+            <div className="panel p-6 text-slate-500">No warnings yet. They are created automatically when a storm crosses the thresholds.</div>
+          )}
         </div>
       </div>
       {pa && print && (

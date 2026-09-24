@@ -25,16 +25,31 @@ export function NavRail() {
           key={to}
           to={to}
           end={to === '/'}
-          className={({ isActive }) => `group relative flex w-[64px] flex-col items-center gap-1 rounded-lg py-2 text-[10.5px] font-medium transition ${isActive ? 'bg-volt/10 text-volt' : 'text-slate-400 hover:bg-white/5 hover:text-slate-100'}`}
+          className={({ isActive }) =>
+            `group relative flex w-[64px] flex-col items-center gap-1 rounded-lg py-2 text-[10.5px] font-medium transition ${isActive ? 'bg-volt/10 text-volt' : 'text-slate-400 hover:bg-white/5 hover:text-slate-100'}`
+          }
         >
           <Icon className="h-5 w-5" />
           <span className="text-center leading-tight">{label}</span>
-          {to === '/alerts' && live.length > 0 && <span className="absolute right-2 top-1 rounded-full bg-sev-red px-1.5 text-[9px] font-bold text-white tnum" aria-label={`${live.length} live warnings`}>{live.length}</span>}
-          {to === '/sensors' && bad > 0 && <span className="absolute right-2 top-1 rounded-full bg-sev-orange px-1.5 text-[9px] font-bold text-ink-950 tnum" aria-label={`${bad} sensors degraded`}>{bad}</span>}
+          {to === '/alerts' && live.length > 0 && (
+            <span className="absolute right-2 top-1 rounded-full bg-sev-red px-1.5 text-[9px] font-bold text-white tnum" aria-label={`${live.length} live warnings`}>
+              {live.length}
+            </span>
+          )}
+          {to === '/sensors' && bad > 0 && (
+            <span className="absolute right-2 top-1 rounded-full bg-sev-orange px-1.5 text-[9px] font-bold text-ink-950 tnum" aria-label={`${bad} sensors degraded`}>
+              {bad}
+            </span>
+          )}
         </NavLink>
       ))}
       <div className="mt-auto" />
-      <a href="#/public" target="_blank" rel="noreferrer" className="flex w-[64px] flex-col items-center gap-1 rounded-lg py-2 text-[10.5px] font-medium text-plasma hover:bg-plasma/10">
+      <a
+        href="#/public"
+        target="_blank"
+        rel="noreferrer"
+        className="flex w-[64px] flex-col items-center gap-1 rounded-lg py-2 text-[10.5px] font-medium text-plasma hover:bg-plasma/10"
+      >
         <Smartphone className="h-5 w-5" />
         Citizen app
       </a>

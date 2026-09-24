@@ -1,4 +1,18 @@
-export function Sparkline({ values, color = '#22d3ee', height = 28, width = 120, fill = true, marker }: { values: number[]; color?: string; height?: number; width?: number; fill?: boolean; marker?: number }) {
+export function Sparkline({
+  values,
+  color = '#22d3ee',
+  height = 28,
+  width = 120,
+  fill = true,
+  marker,
+}: {
+  values: number[];
+  color?: string;
+  height?: number;
+  width?: number;
+  fill?: boolean;
+  marker?: number;
+}) {
   if (values.length < 2) return <svg width={width} height={height} />;
   const min = Math.min(...values);
   const max = Math.max(...values);
@@ -17,7 +31,17 @@ export function Sparkline({ values, color = '#22d3ee', height = 28, width = 120,
       {fill && <path d={`${d} L${width},${height} L0,${height} Z`} fill={`url(#${id})`} />}
       <path d={d} fill="none" stroke={color} strokeWidth={1.6} strokeLinejoin="round" />
       <circle cx={pts[pts.length - 1][0]} cy={pts[pts.length - 1][1]} r={2.4} fill={color} />
-      {marker !== undefined && <line x1={0} x2={width} y1={height - 2 - ((marker - min) / span) * (height - 4)} y2={height - 2 - ((marker - min) / span) * (height - 4)} stroke="#64748b" strokeDasharray="2 3" strokeWidth={1} />}
+      {marker !== undefined && (
+        <line
+          x1={0}
+          x2={width}
+          y1={height - 2 - ((marker - min) / span) * (height - 4)}
+          y2={height - 2 - ((marker - min) / span) * (height - 4)}
+          stroke="#64748b"
+          strokeDasharray="2 3"
+          strokeWidth={1}
+        />
+      )}
     </svg>
   );
 }

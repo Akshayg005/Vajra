@@ -27,7 +27,10 @@ export function EChart({ option, height = 240, className }: { option: echarts.EC
     };
   }, []);
   useEffect(() => {
-    inst.current?.setOption({ animationDurationUpdate: 500, animationEasingUpdate: 'cubicOut', backgroundColor: 'transparent', textStyle: { fontFamily: 'Inter' }, ...option }, { notMerge: false, lazyUpdate: true });
+    inst.current?.setOption(
+      { animationDurationUpdate: 500, animationEasingUpdate: 'cubicOut', backgroundColor: 'transparent', textStyle: { fontFamily: 'Inter' }, ...option },
+      { notMerge: false, lazyUpdate: true },
+    );
   }, [option]);
   return <div ref={ref} className={className} style={{ height, width: '100%' }} />;
 }

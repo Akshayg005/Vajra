@@ -12,7 +12,12 @@ export const BASE_STYLE: StyleSpecification = {
     outline: { type: 'geojson', data: '/geo/india-outline.geojson' },
     states: { type: 'geojson', data: '/geo/india-states.geojson' },
     districts: { type: 'geojson', data: '/geo/india-districts.geojson' },
-    imagery: { type: 'raster', tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'], tileSize: 256, attribution: 'Imagery © Esri' },
+    imagery: {
+      type: 'raster',
+      tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
+      tileSize: 256,
+      attribution: 'Imagery © Esri',
+    },
   },
   layers: [
     { id: 'water', type: 'background', paint: { 'background-color': '#040913' } },

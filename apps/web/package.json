@@ -7,7 +7,12 @@
     "dev": "vite --host",
     "build": "tsc -b && vite build",
     "preview": "vite preview --host --port 4173",
-    "typecheck": "tsc -b --noEmit"
+    "typecheck": "tsc -b --noEmit",
+    "lint": "eslint src",
+    "format": "prettier --write src",
+    "format:check": "prettier --check src",
+    "test": "vitest run",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@deck.gl/core": "^9.0.38",

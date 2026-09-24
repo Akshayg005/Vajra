@@ -1,7 +1,19 @@
 import { useEffect, useRef, useState } from 'react';
 
 /** Eases numeric changes (no flicker): 400 ms ease-out between successive values. */
-export function AnimatedNumber({ value, decimals = 0, className, suffix = '', format }: { value: number; decimals?: number; className?: string; suffix?: string; format?: (v: number) => string }) {
+export function AnimatedNumber({
+  value,
+  decimals = 0,
+  className,
+  suffix = '',
+  format,
+}: {
+  value: number;
+  decimals?: number;
+  className?: string;
+  suffix?: string;
+  format?: (v: number) => string;
+}) {
   const [shown, setShown] = useState(value);
   const from = useRef(value);
   const start = useRef(0);

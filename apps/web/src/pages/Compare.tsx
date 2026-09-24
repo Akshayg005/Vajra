@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronRight, Columns2 } from 'lucide-react';
 import type { GridField } from '@vajra/contracts';
 import { useStore } from '../store';
-import { DBZ, PROB, gridToImage } from '../lib/colormap';
+import { DBZ, PROB, gridToImage, type Lut } from '../lib/colormap';
 import { drawGeo, useGeo } from '../lib/geoCanvas';
 import { SeverityBadge } from '../components/SeverityBadge';
 import { SEV_RANK } from '../lib/format';
@@ -22,31 +22,34 @@ export default function Compare() {
   const W = 1200;
   const H = Math.round((W * (n - s)) / (e - w) / Math.cos((((s + n) / 2) * Math.PI) / 180));
 
-  const paint = (c: HTMLCanvasElement | null, g: GridField, lut: typeof DBZ, smooth: boolean) => {
-    if (!c) return;
+  // basemap (districts fill + lines) is drawn once per domain and reused for every radar frame
+  const base = useMemo(() => {
+    const c = document.createElement('canvas');
+    c.width = W;
+    c.height = H;
     const ctx = c.getContext('2d')!;
     ctx.fillStyle = '#03050a';
     ctx.fillRect(0, 0, W, H);
-    if (districts) drawGeo(ctx, districts, snap.scenario.bbox, W, H, { stroke: '#1a2438', width: 0.6, fill: '#0c1528' });
-    const tmp = document.createElement('canvas');
-    tmp.width = g.width;
-    tmp.height = g.height;
-    tmp.getContext('2d')!.putImageData(gridToImage(g, lut), 0, 0);
-    ctx.imageSmoothingEnabled = smooth;
-    const gx = ((g.bbox[0] - w) / (e - w)) * W;
-    const gy = ((n - g.bbox[3]) / (n - s)) * H;
-    const gw = ((g.bbox[2] - g.bbox[0]) / (e - w)) * W;
-    const gh = ((g.bbox[3] - g.bbox[1]) / (n - s)) * H;
-    ctx.drawImage(tmp, gx, gy, gw, gh);
-    if (states) drawGeo(ctx, states, snap.scenario.bbox, W, H, { stroke: '#64748b', width: 1.3 });
-  };
+    if (districts) drawGeo(ctx, districts, [w, s, e, n], W, H, { stroke: '#1a2438', width: 0.6, fill: '#0c1528' });
+    return c;
+  }, [districts, w, s, e, n, W, H]);
+  const top = useMemo(() => {
+    const c = document.createElement('canvas');
+    c.width = W;
+    c.height = H;
+    if (states) drawGeo(c.getContext('2d')!, states, [w, s, e, n], W, H, { stroke: '#64748b', width: 1.3 });
+    return c;
+  }, [states, w, s, e, n, W, H]);
 
+  const nwp = snap.nwp;
+  const dbz = snap.dbz;
   useEffect(() => {
-    paint(left.current, snap.nwp, DBZ, false);
+    const bbox: [number, number, number, number] = [w, s, e, n];
+    paint(left.current, nwp, DBZ, false, base, top, bbox, W, H);
     const p60 = nowcast.find((f) => f.band === '30-60');
-    if (mode === 'p60' && p60) paint(right.current, p60.prob, PROB, true);
-    else paint(right.current, snap.dbz, DBZ, true);
-  }, [snap.nwp.t, snap.dbz.t, mode, nowcast, states, districts]);
+    if (mode === 'p60' && p60) paint(right.current, p60.prob, PROB, true, base, top, bbox, W, H);
+    else paint(right.current, dbz, DBZ, true, base, top, bbox, W, H);
+  }, [nwp, dbz, mode, nowcast, base, top, w, s, e, n, W, H]);
 
   const onMove = (x: number) => {
     const r = wrap.current!.getBoundingClientRect();
@@ -120,8 +123,39 @@ export default function Compare() {
           );
         })}
         {!live.length && <div className="text-xs text-slate-500">No live warnings.</div>}
-        <p className="mt-3 text-[11px] leading-snug text-slate-500">NWP puts storms in roughly the right region but tens of km off and smoothed; the nowcast pins the cell to a 2 km grid, so warnings can drop from district level to block and panchayat level.</p>
+        <p className="mt-3 text-[11px] leading-snug text-slate-500">
+          NWP puts storms in roughly the right region but tens of km off and smoothed; the nowcast pins the cell to a 2 km grid, so warnings can drop from district level to block
+          and panchayat level.
+        </p>
       </div>
     </div>
   );
+}
+
+function paint(
+  c: HTMLCanvasElement | null,
+  g: GridField,
+  lut: Lut,
+  smooth: boolean,
+  base: HTMLCanvasElement,
+  top: HTMLCanvasElement,
+  bbox: [number, number, number, number],
+  W: number,
+  H: number,
+) {
+  if (!c) return;
+  const [w, s, e, n] = bbox;
+  const ctx = c.getContext('2d')!;
+  ctx.drawImage(base, 0, 0);
+  const tmp = document.createElement('canvas');
+  tmp.width = g.width;
+  tmp.height = g.height;
+  tmp.getContext('2d')!.putImageData(gridToImage(g, lut), 0, 0);
+  ctx.imageSmoothingEnabled = smooth;
+  const gx = ((g.bbox[0] - w) / (e - w)) * W;
+  const gy = ((n - g.bbox[3]) / (n - s)) * H;
+  const gw = ((g.bbox[2] - g.bbox[0]) / (e - w)) * W;
+  const gh = ((g.bbox[3] - g.bbox[1]) / (n - s)) * H;
+  ctx.drawImage(tmp, gx, gy, gw, gh);
+  ctx.drawImage(top, 0, 0);
 }

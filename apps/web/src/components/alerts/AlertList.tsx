@@ -8,7 +8,19 @@ import { ago, useSimNow } from '../../lib/useNow';
 
 export type AlertFilter = 'live' | 'draft' | 'all';
 
-export function AlertList({ alerts, selectedId, onSelect, filter, setFilter }: { alerts: Alert[]; selectedId: string | undefined; onSelect: (id: string) => void; filter: AlertFilter; setFilter: (f: AlertFilter) => void }) {
+export function AlertList({
+  alerts,
+  selectedId,
+  onSelect,
+  filter,
+  setFilter,
+}: {
+  alerts: Alert[];
+  selectedId: string | undefined;
+  onSelect: (id: string) => void;
+  filter: AlertFilter;
+  setFilter: (f: AlertFilter) => void;
+}) {
   const now = useSimNow();
   const list = useMemo(
     () =>
@@ -26,20 +38,33 @@ export function AlertList({ alerts, selectedId, onSelect, filter, setFilter }: {
         <span className="panel-title">Warnings</span>
         <div className="flex gap-1" role="tablist">
           {(['live', 'draft', 'all'] as const).map((f) => (
-            <button key={f} role="tab" aria-selected={filter === f} onClick={() => setFilter(f)} className={`rounded-md px-2 py-0.5 text-xs ${filter === f ? 'bg-volt/20 text-volt' : 'text-slate-400 hover:bg-white/5'}`}>
+            <button
+              key={f}
+              role="tab"
+              aria-selected={filter === f}
+              onClick={() => setFilter(f)}
+              className={`rounded-md px-2 py-0.5 text-xs ${filter === f ? 'bg-volt/20 text-volt' : 'text-slate-400 hover:bg-white/5'}`}
+            >
               {f === 'live' ? 'Live' : f === 'draft' ? `Drafts (${alerts.filter((a) => a.status === 'draft').length})` : 'All (log)'}
             </button>
           ))}
         </div>
       </div>
-      <div className="grid grid-cols-3 gap-2 border-b border-white/5 p-3 text-center" title="Alert-fatigue guard: overlapping warnings are merged and repeats are suppressed instead of re-sent">
+      <div
+        className="grid grid-cols-3 gap-2 border-b border-white/5 p-3 text-center"
+        title="Alert-fatigue guard: overlapping warnings are merged and repeats are suppressed instead of re-sent"
+      >
         <Mini label="Repeats suppressed" value={suppressed} Icon={VolumeX} />
         <Mini label="Merged overlaps" value={merged} Icon={GitMerge} />
         <Mini label="Verified false alarms" value={falseAlarms} Icon={Bell} />
       </div>
       <div className="scroll-thin min-h-0 flex-1 overflow-y-auto">
         {list.map((x) => (
-          <button key={x.id} onClick={() => onSelect(x.id)} className={`w-full border-b border-white/[0.04] px-3 py-2.5 text-left transition hover:bg-white/5 ${selectedId === x.id ? 'bg-white/[0.06]' : ''} ${!isLive(x) ? 'opacity-55' : ''}`}>
+          <button
+            key={x.id}
+            onClick={() => onSelect(x.id)}
+            className={`w-full border-b border-white/[0.04] px-3 py-2.5 text-left transition hover:bg-white/5 ${selectedId === x.id ? 'bg-white/[0.06]' : ''} ${!isLive(x) ? 'opacity-55' : ''}`}
+          >
             <div className="flex items-center justify-between gap-2">
               <span className="flex items-center gap-1.5">
                 <SeverityBadge severity={x.severity} />

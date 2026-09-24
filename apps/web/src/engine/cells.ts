@@ -53,23 +53,10 @@ export interface CellAgent {
 }
 
 const LETTERS = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
-let counter = 0;
-export function resetCellCounter() {
-  counter = 0;
-}
 
-export function makeCell(
-  rng: Rng,
-  t: number,
-  lng: number,
-  lat: number,
-  type: StormType,
-  strength: number,
-  sc: Scenario,
-  injected = false,
-): CellAgent {
-  counter++;
-  const id = `${LETTERS[counter % LETTERS.length]}${String(counter).padStart(2, '0')}`;
+/** `seq` is the World's own cell counter, so every world is fully independent and deterministic. */
+export function makeCell(rng: Rng, t: number, lng: number, lat: number, type: StormType, strength: number, sc: Scenario, injected = false, seq = 1): CellAgent {
+  const id = `${LETTERS[seq % LETTERS.length]}${String(seq).padStart(2, '0')}`;
   // lifetimes (minutes) by storm type: pulse ~45-70, multicell 90-150, squall 150-240, supercell 120-200
   const life: Record<StormType, [number, number, number]> = {
     pulse: [15, 20, 25],
@@ -156,7 +143,6 @@ export function envelope(c: CellAgent, t: number): { I: number; stage: Lifecycle
  */
 export function updatePhysics(c: CellAgent, t: number, dtMin: number, env: EnvProfile, rng: Rng, lightningFactor = 1) {
   const { I, stage } = envelope(c, t);
-  const prevCtt = c.cttK;
   c.stage = stage;
   c.env = env;
   // environmental modulation: CAPE and shear feed the storm; CIN caps it
@@ -165,8 +151,8 @@ export function updatePhysics(c: CellAgent, t: number, dtMin: number, env: EnvPr
   c.intensity = eff;
   const typeTop = c.type === 'supercell' ? 2.5 : c.type === 'squall' ? 1 : 0;
   // bounded change per tick: radar-observed cores cannot jump more than ~4 dBZ/min or tops ~0.8 km/min
-  const dbzTarget = clamp(18 + 47 * eff + (c.type === 'supercell' ? 4 * eff : 0) + rng.normal(0, 0.6), 10, 72);
-  const topTarget = clamp(3 + 12.5 * eff + typeTop * eff + rng.normal(0, 0.15), 2, 18.5);
+  const dbzTarget = clamp(18 + 47 * eff + (c.type === 'supercell' ? 4 * eff : 0) + rng.normal(0, 0.6 * Math.sqrt(Math.min(1, dtMin))), 10, 72);
+  const topTarget = clamp(3 + 12.5 * eff + typeTop * eff + rng.normal(0, 0.15 * Math.sqrt(Math.min(1, dtMin))), 2, 18.5);
   const dStep = 4 * dtMin + 0.3;
   const tStep = 0.8 * dtMin + 0.05;
   c.maxDbz = c.maxDbz + clamp(dbzTarget - c.maxDbz, -dStep, dStep);
@@ -181,8 +167,18 @@ export function updatePhysics(c: CellAgent, t: number, dtMin: number, env: EnvPr
   const a = 1 - Math.exp(-dtMin / 1.0);
   c.flashRate = c.flashRate + (frTarget - c.flashRate) * a;
   c.cttK = clamp(303 - 6.5 * c.echoTopKm, 192, 290);
-  const dCtt = prevCtt - c.cttK; // positive = cooling
-  c.cttCoolingK15 = dtMin > 0 ? c.cttCoolingK15 * 0.7 + 0.3 * (dCtt / dtMin) * 15 : c.cttCoolingK15;
+  // cloud-top cooling from ~15 min of history (as an analyst reads successive INSAT images), not per-tick noise
+  const hist = c.history;
+  let ref: CellHistorySample | undefined;
+  for (let i = hist.length - 1; i >= 0; i--) {
+    if (t - hist[i].t >= 12 * 60000) {
+      ref = hist[i];
+      break;
+    }
+  }
+  ref = ref ?? hist[0];
+  const target = ref && t - ref.t >= 2 * 60000 ? ((ref.cttK - c.cttK) * 15 * 60000) / (t - ref.t) : 0;
+  c.cttCoolingK15 = c.cttCoolingK15 + (target - c.cttCoolingK15) * (1 - Math.exp(-dtMin / 3));
   c.radiusKm = clamp((c.type === 'squall' ? 10 : c.type === 'supercell' ? 9 : c.type === 'multicell' ? 8 : 5) * (0.5 + 0.7 * I), 2.5, 22);
   // hail: VIL density (VIL / echo top) > 3.5 g/m3 or 60 dBZ reaching > 10 km
   const vilDensity = c.vil / Math.max(1, c.echoTopKm);

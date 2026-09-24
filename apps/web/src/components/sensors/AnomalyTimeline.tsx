@@ -13,7 +13,12 @@ export function AnomalyTimeline({ events, now }: { events: EngineEvent[]; now: n
     rows.set(name, [...(rows.get(name) ?? []), { t: e.t, kind, text: e.text }]);
   }
   const color = { fault: '#ef4444', recovering: '#22d3ee', healed: '#22c55e', injected: '#a78bfa' } as const;
-  if (!rows.size) return <div className="text-xs text-slate-400">No sensor anomalies in the last 60 min. A scheduled dropout arrives about every 10 min; or inject one from Director Mode (Shift+D).</div>;
+  if (!rows.size)
+    return (
+      <div className="text-xs text-slate-400">
+        No sensor anomalies in the last 60 min. A scheduled dropout arrives about every 10 min; or inject one from Director Mode (Shift+D).
+      </div>
+    );
   return (
     <div className="space-y-1.5">
       <div className="flex justify-between pl-[150px] font-mono text-[10px] text-slate-500">
@@ -28,7 +33,12 @@ export function AnomalyTimeline({ events, now }: { events: EngineEvent[]; now: n
           </div>
           <div className="relative h-4 flex-1 rounded bg-white/[0.04]">
             {evs.map((e, i) => (
-              <span key={i} title={`${fmtIST(e.t, true)} — ${e.text}`} className="absolute top-0.5 h-3 w-1.5 rounded-sm" style={{ left: `${((e.t - (now - span)) / span) * 100}%`, background: color[e.kind] }} />
+              <span
+                key={i}
+                title={`${fmtIST(e.t, true)} — ${e.text}`}
+                className="absolute top-0.5 h-3 w-1.5 rounded-sm"
+                style={{ left: `${((e.t - (now - span)) / span) * 100}%`, background: color[e.kind] }}
+              />
             ))}
           </div>
         </div>

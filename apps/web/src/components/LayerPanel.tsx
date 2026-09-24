@@ -56,13 +56,27 @@ export function LayerPanel() {
                 <label htmlFor={`layer-${l.k}`} title={l.hint} className="flex-1 cursor-pointer truncate text-[12.5px] text-slate-200">
                   {l.label}
                 </label>
-                <button className={`rounded p-0.5 ${tune === l.k ? 'text-volt' : 'text-slate-500 hover:text-slate-200'}`} onClick={() => setTune(tune === l.k ? null : l.k)} aria-label={`Opacity for ${l.label}`} title="Opacity">
+                <button
+                  className={`rounded p-0.5 ${tune === l.k ? 'text-volt' : 'text-slate-500 hover:text-slate-200'}`}
+                  onClick={() => setTune(tune === l.k ? null : l.k)}
+                  aria-label={`Opacity for ${l.label}`}
+                  title="Opacity"
+                >
                   <SlidersHorizontal className="h-3.5 w-3.5" />
                 </button>
               </div>
               {tune === l.k && (
                 <div className="flex items-center gap-2 px-2 pb-1">
-                  <input type="range" min={0.1} max={1} step={0.05} value={opacity[l.k]} onChange={(e) => setOpacity(l.k, Number(e.target.value))} className="flex-1 accent-cyan-400" aria-label={`${l.label} opacity`} />
+                  <input
+                    type="range"
+                    min={0.1}
+                    max={1}
+                    step={0.05}
+                    value={opacity[l.k]}
+                    onChange={(e) => setOpacity(l.k, Number(e.target.value))}
+                    className="flex-1 accent-cyan-400"
+                    aria-label={`${l.label} opacity`}
+                  />
                   <span className="w-9 text-right font-mono text-[11px] text-slate-300">{Math.round(opacity[l.k] * 100)}%</span>
                 </div>
               )}
@@ -72,7 +86,12 @@ export function LayerPanel() {
             <div className="panel-title mb-1.5">Lead-time band (min)</div>
             <div className="flex gap-1">
               {BANDS.map((b) => (
-                <button key={b.k} onClick={() => setBand(b.k)} aria-pressed={band === b.k} className={`flex-1 rounded-md border px-1 py-1 font-mono text-[10px] ${band === b.k ? 'border-volt/60 bg-volt/15 text-white' : 'border-white/10 text-slate-400 hover:bg-white/5'}`}>
+                <button
+                  key={b.k}
+                  onClick={() => setBand(b.k)}
+                  aria-pressed={band === b.k}
+                  className={`flex-1 rounded-md border px-1 py-1 font-mono text-[10px] ${band === b.k ? 'border-volt/60 bg-volt/15 text-white' : 'border-white/10 text-slate-400 hover:bg-white/5'}`}
+                >
                   {b.color && <span className="mr-0.5 inline-block h-1.5 w-1.5 rounded-full" style={{ background: b.color }} />}
                   {b.label}
                 </button>

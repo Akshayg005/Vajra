@@ -13,7 +13,9 @@ export function XaiPanel({ xai }: { xai: XaiExplanation }) {
         <span className="panel-title flex items-center gap-1.5">
           <Brain className="h-3.5 w-3.5 text-plasma" /> Why? (explainable AI)
         </span>
-        <span className="font-mono text-xs text-slate-400">Σ = <span className="text-white">{total.toFixed(1)}%</span></span>
+        <span className="font-mono text-xs text-slate-400">
+          Σ = <span className="text-white">{total.toFixed(1)}%</span>
+        </span>
       </div>
       <div className="space-y-1">
         {items.map((c) => {

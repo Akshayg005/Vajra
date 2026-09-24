@@ -186,7 +186,24 @@ export function nearestTown(lng: number, lat: number) {
 }
 
 const BLOCK_SUFFIX = ['Sadar', 'North', 'South', 'East', 'West', 'Rural', 'Uttar', 'Dakshin'];
-const GP_ROOTS = ['Rampur', 'Kishanpur', 'Chandpur', 'Sonpur', 'Madhopur', 'Bishnupur', 'Lakshmipur', 'Govindpur', 'Shivpur', 'Narayanpur', 'Rasulpur', 'Belgachhi', 'Kalyanpur', 'Durgapur Khurd', 'Harinagar', 'Shyamnagar'];
+const GP_ROOTS = [
+  'Rampur',
+  'Kishanpur',
+  'Chandpur',
+  'Sonpur',
+  'Madhopur',
+  'Bishnupur',
+  'Lakshmipur',
+  'Govindpur',
+  'Shivpur',
+  'Narayanpur',
+  'Rasulpur',
+  'Belgachhi',
+  'Kalyanpur',
+  'Durgapur Khurd',
+  'Harinagar',
+  'Shyamnagar',
+];
 
 /** Deterministic block + panchayat naming inside a district (placeholder until LGD codes are loaded). */
 export function blockAndPanchayat(lng: number, lat: number) {

@@ -8,7 +8,10 @@ import { flyToCell } from './MapView';
 export function CellList() {
   const cells = useStore((s) => s.snap?.cells ?? []);
   const select = useStore((s) => s.select);
-  const sorted = [...cells].filter((c) => c.maxDbz > 30).sort((a, b) => SEV_RANK[b.severity] - SEV_RANK[a.severity] || b.maxDbz - a.maxDbz).slice(0, 12);
+  const sorted = [...cells]
+    .filter((c) => c.maxDbz > 30)
+    .sort((a, b) => SEV_RANK[b.severity] - SEV_RANK[a.severity] || b.maxDbz - a.maxDbz)
+    .slice(0, 12);
   return (
     <div className="panel pointer-events-auto flex max-h-full w-[400px] flex-col overflow-hidden">
       <div className="flex items-center justify-between border-b border-white/5 p-3">

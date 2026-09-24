@@ -1,6 +1,26 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Anchor, Bell, Copy, Download, Factory, FileCode2, GitMerge, GraduationCap, MessageCircle, Pencil, Plane, Printer, Route, Send, Siren, Smartphone, Tractor, Users, VolumeX } from 'lucide-react';
+import {
+  Anchor,
+  Bell,
+  Copy,
+  Download,
+  Factory,
+  FileCode2,
+  GitMerge,
+  GraduationCap,
+  MessageCircle,
+  Pencil,
+  Plane,
+  Printer,
+  Route,
+  Send,
+  Siren,
+  Smartphone,
+  Tractor,
+  Users,
+  VolumeX,
+} from 'lucide-react';
 import type { Alert, Channel } from '@vajra/contracts';
 import { useStore } from '../../store';
 import { SeverityBadge } from '../SeverityBadge';
@@ -81,13 +101,23 @@ export function AlertDetail({ a, others, onPrint }: { a: Alert; others: Alert[];
             </button>
           ) : null}
           {live && a.status !== 'suppressed' && (
-            <button className="btn" disabled={!!busy} onClick={() => act('suppress', () => send({ type: 'alertSuppress', id: a.id }))} title="Stop dissemination (duplicate or repeat)">
+            <button
+              className="btn"
+              disabled={!!busy}
+              onClick={() => act('suppress', () => send({ type: 'alertSuppress', id: a.id }))}
+              title="Stop dissemination (duplicate or repeat)"
+            >
               <VolumeX className="h-4 w-4" /> {busy === 'suppress' ? 'Suppressing…' : 'Suppress'}
             </button>
           )}
           {live && (
             <span className="flex items-center gap-1">
-              <select value={mergeInto} onChange={(e) => setMergeInto(e.target.value)} className="rounded-md border border-white/10 bg-ink-800 px-2 py-1.5 text-sm" aria-label="Merge into warning">
+              <select
+                value={mergeInto}
+                onChange={(e) => setMergeInto(e.target.value)}
+                className="rounded-md border border-white/10 bg-ink-800 px-2 py-1.5 text-sm"
+                aria-label="Merge into warning"
+              >
                 <option value="">Merge into…</option>
                 {others.map((o) => (
                   <option key={o.id} value={o.id}>
@@ -161,7 +191,10 @@ export function AlertDetail({ a, others, onPrint }: { a: Alert; others: Alert[];
                 {CH[d.channel].label}
               </span>
               <div className="h-2 overflow-hidden rounded-full bg-white/5">
-                <div className="h-2 rounded-full bg-gradient-to-r from-volt to-plasma" style={{ width: `${(d.delivered / Math.max(1, d.target)) * 100}%`, transition: 'width 400ms ease-out' }} />
+                <div
+                  className="h-2 rounded-full bg-gradient-to-r from-volt to-plasma"
+                  style={{ width: `${(d.delivered / Math.max(1, d.target)) * 100}%`, transition: 'width 400ms ease-out' }}
+                />
               </div>
               <span className="text-right font-mono text-slate-300 tnum">
                 <AnimatedNumber value={d.delivered} format={(v) => fmtN(Math.round(v))} /> / {fmtN(d.target)}
@@ -174,16 +207,31 @@ export function AlertDetail({ a, others, onPrint }: { a: Alert; others: Alert[];
       <div className="panel p-3">
         <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
           <div className="flex gap-1" role="tablist">
-            <button role="tab" aria-selected={tab === 'bulletin'} onClick={() => setTab('bulletin')} className={`rounded-md px-2.5 py-1 text-xs ${tab === 'bulletin' ? 'bg-volt/20 text-volt' : 'text-slate-400 hover:bg-white/5'}`}>
+            <button
+              role="tab"
+              aria-selected={tab === 'bulletin'}
+              onClick={() => setTab('bulletin')}
+              className={`rounded-md px-2.5 py-1 text-xs ${tab === 'bulletin' ? 'bg-volt/20 text-volt' : 'text-slate-400 hover:bg-white/5'}`}
+            >
               Auto-drafted bulletin
             </button>
-            <button role="tab" aria-selected={tab === 'cap'} onClick={() => setTab('cap')} className={`rounded-md px-2.5 py-1 text-xs ${tab === 'cap' ? 'bg-volt/20 text-volt' : 'text-slate-400 hover:bg-white/5'}`}>
+            <button
+              role="tab"
+              aria-selected={tab === 'cap'}
+              onClick={() => setTab('cap')}
+              className={`rounded-md px-2.5 py-1 text-xs ${tab === 'cap' ? 'bg-volt/20 text-volt' : 'text-slate-400 hover:bg-white/5'}`}
+            >
               CAP 1.2 XML (SACHET-style)
             </button>
           </div>
           <div className="flex flex-wrap gap-1">
             {tab === 'bulletin' && (
-              <select value={lang} onChange={(e) => setLang(e.target.value as BLang)} className="rounded-md border border-white/10 bg-ink-800 px-2 py-1 text-xs" aria-label="Bulletin language">
+              <select
+                value={lang}
+                onChange={(e) => setLang(e.target.value as BLang)}
+                className="rounded-md border border-white/10 bg-ink-800 px-2 py-1 text-xs"
+                aria-label="Bulletin language"
+              >
                 {BLANGS.map((l) => (
                   <option key={l.code} value={l.code}>
                     {l.label}
@@ -202,7 +250,9 @@ export function AlertDetail({ a, others, onPrint }: { a: Alert; others: Alert[];
             </button>
           </div>
         </div>
-        <pre className="scroll-thin max-h-[320px] overflow-auto whitespace-pre-wrap rounded-lg bg-ink-950/80 p-3 font-mono text-[12.5px] leading-relaxed text-slate-200">{tab === 'cap' ? cap || 'Building CAP…' : bulletin}</pre>
+        <pre className="scroll-thin max-h-[320px] overflow-auto whitespace-pre-wrap rounded-lg bg-ink-950/80 p-3 font-mono text-[12.5px] leading-relaxed text-slate-200">
+          {tab === 'cap' ? cap || 'Building CAP…' : bulletin}
+        </pre>
       </div>
     </motion.div>
   );

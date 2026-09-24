@@ -29,7 +29,14 @@ export function FusionDiagram({ sensors }: { sensors: SensorStatus[] }) {
             <text x={16} y={y + 27} fill={cut ? '#fca5a5' : '#94a3b8'} fontSize="10" fontFamily="JetBrains Mono">
               {list.length - excluded}/{list.length} in fusion{excluded ? ` · ${excluded} excluded` : ''}
             </text>
-            <path d={`M176 ${y + 16} C 230 ${y + 16}, 230 115, 280 115`} fill="none" stroke={cut ? '#ef4444' : '#22d3ee'} strokeWidth={cut ? 1.2 : 1.8} strokeDasharray={cut ? '4 4' : undefined} opacity={0.8} />
+            <path
+              d={`M176 ${y + 16} C 230 ${y + 16}, 230 115, 280 115`}
+              fill="none"
+              stroke={cut ? '#ef4444' : '#22d3ee'}
+              strokeWidth={cut ? 1.2 : 1.8}
+              strokeDasharray={cut ? '4 4' : undefined}
+              opacity={0.8}
+            />
             {cut && (
               <text x={214} y={y + 12} fill="#ef4444" fontSize="12" fontWeight="700">
                 ✕

@@ -3,7 +3,8 @@ import type { CitizenReport, DirectorCommand, NowcastFrame, StormCell } from '@v
 import type { DataAdapter, Snapshot, SourceStatus } from './data/adapters';
 import type { FrameAt } from './engine/engine';
 
-export type LayerKey = 'radar' | 'satellite' | 'lightning' | 'nowcast' | 'extended' | 'cells' | 'tracks' | 'alerts' | 'confidence' | 'rings' | 'reports' | 'districts' | 'cities' | 'assets' | 'imagery';
+export type LayerKey =
+  'radar' | 'satellite' | 'lightning' | 'nowcast' | 'extended' | 'cells' | 'tracks' | 'alerts' | 'confidence' | 'rings' | 'reports' | 'districts' | 'cities' | 'assets' | 'imagery';
 export type BandKey = 'all' | '0-30' | '30-60' | '60-120' | '120-180';
 export type DetailKind = 'cell' | 'alert' | 'strike' | 'report' | 'sensor' | 'asset' | 'city';
 export interface Detail {
@@ -26,8 +27,40 @@ const writeLS = (k: string, v: string) => {
   }
 };
 
-const LAYERS_DEFAULT: Record<LayerKey, boolean> = { radar: true, satellite: false, lightning: true, nowcast: true, extended: true, cells: true, tracks: true, alerts: true, confidence: false, rings: false, reports: true, districts: true, cities: true, assets: false, imagery: false };
-const OPACITY_DEFAULT: Record<LayerKey, number> = { radar: 0.92, satellite: 0.85, lightning: 1, nowcast: 0.9, extended: 0.55, cells: 1, tracks: 1, alerts: 1, confidence: 0.95, rings: 1, reports: 1, districts: 1, cities: 0.9, assets: 1, imagery: 1 };
+const LAYERS_DEFAULT: Record<LayerKey, boolean> = {
+  radar: true,
+  satellite: false,
+  lightning: true,
+  nowcast: true,
+  extended: true,
+  cells: true,
+  tracks: true,
+  alerts: true,
+  confidence: false,
+  rings: false,
+  reports: true,
+  districts: true,
+  cities: true,
+  assets: false,
+  imagery: false,
+};
+const OPACITY_DEFAULT: Record<LayerKey, number> = {
+  radar: 0.92,
+  satellite: 0.85,
+  lightning: 1,
+  nowcast: 0.9,
+  extended: 0.55,
+  cells: 1,
+  tracks: 1,
+  alerts: 1,
+  confidence: 0.95,
+  rings: 1,
+  reports: 1,
+  districts: 1,
+  cities: 0.9,
+  assets: 1,
+  imagery: 1,
+};
 
 interface State {
   adapter: DataAdapter | null;
