@@ -74,8 +74,21 @@ const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
 
 let cached: THREE.Data3DTexture | null = null;
 
+/** Force re-creation of the noise texture (call after WebGL context loss). */
+export function invalidateCloudNoise() {
+  if (cached) {
+    cached.dispose();
+    cached = null;
+  }
+}
+
 export function cloudNoiseTexture(size = 64): THREE.Data3DTexture {
-  if (cached) return cached;
+  if (cached) {
+    // Force re-upload every time the texture is accessed – guarantees GPU data is
+    // present even after a WebGL context loss + restore cycle wiped it.
+    cached.needsUpdate = true;
+    return cached;
+  }
   const data = new Uint8Array(size * size * size * 4);
   let i = 0;
   for (let z = 0; z < size; z++)

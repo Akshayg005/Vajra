@@ -48,21 +48,21 @@ if not exist "node_modules" (
 )
 
 :: ── Optional: Setup Python API venv ────────────────────────
-if not exist "apps\api\.venv" (
-    where python >nul 2>&1
-    if %errorlevel% equ 0 (
-        echo  [SETUP] Setting up Python API (optional)...
-        python -m venv apps\api\.venv
-        apps\api\.venv\Scripts\python.exe -m pip install --upgrade pip -q
-        apps\api\.venv\Scripts\python.exe -m pip install -r apps\api\requirements-dev.txt -q
-        echo  [OK] Python API ready on http://localhost:8000
-        echo.
-    ) else (
-        echo  [SKIP] Python not found - skipping API setup.
-        echo         The web app works fully offline without it.
-        echo.
-    )
-)
+if exist "apps\api\.venv" goto :skip_venv
+where python >nul 2>&1
+if %errorlevel% neq 0 goto :no_python
+echo  [SETUP] Setting up Python API (optional)...
+python -m venv apps\api\.venv
+apps\api\.venv\Scripts\python.exe -m pip install --upgrade pip -q
+apps\api\.venv\Scripts\python.exe -m pip install -r apps\api\requirements-dev.txt -q
+echo  [OK] Python API ready on http://localhost:8000
+echo.
+goto :skip_venv
+:no_python
+echo  [SKIP] Python not found - skipping API setup.
+echo         The web app works fully offline without it.
+echo.
+:skip_venv
 
 :: ── Start API server in background (if venv exists) ────────
 if exist "apps\api\.venv\Scripts\python.exe" (

@@ -14,6 +14,7 @@ void main() {
 `;
 
 export const VOL_FRAG = /* glsl */ `
+// shader v2 – ANGLE-safe (no out params)
 precision highp float;
 precision highp sampler3D;
 uniform sampler3D uNoise;
@@ -34,7 +35,7 @@ uniform float uGround;
 varying vec2 vUv;
 
 #define PI 3.14159265
-#define MAX_STEPS 224
+#define MAX_STEPS 128
 const float R_OUT = 9.5;
 
 float remap(float v, float a, float b, float c, float d) { return c + (v - a) / (b - a) * (d - c); }
@@ -67,22 +68,22 @@ float bandField(vec3 p, float r) {
   return sat(smoothstep(0.15, 0.9, a1) * 0.8 + a2 * 0.35);
 }
 
-// coverage in [0,1] and height fraction for the vortex
-float vortexCov(vec3 p, out float hf) {
+// coverage in [0,1] and height fraction for the vortex — returns vec2(coverage, hf)
+vec2 vortexCov(vec3 p) {
   float r = length(p.xz);
   float base = 0.14;
   float bands = bandField(p, r);
   float outer = smoothstep(uEye * 1.9, R_OUT * 0.5, r);
   // rain bands tower, the gaps between them hold a lower, thinner deck
   float top = base + (topH(r) - base) * mix(1.0, mix(0.42, 1.0, bands), outer);
-  hf = (p.y - base) / max(top - base, 1e-3);
-  if (hf < 0.0 || hf > 1.0 || r > R_OUT) return 0.0;
+  float hf = (p.y - base) / max(top - base, 1e-3);
+  if (hf < 0.0 || hf > 1.0 || r > R_OUT) return vec2(0.0, 0.0);
   // stadium effect: the eye widens with height
   float eR = uEye * (0.68 + 0.6 * hf);
   float eye = smoothstep(eR, eR * 1.14, r);
   float cov = mix(1.0, mix(0.5, 1.0, bands), outer);
   cov *= 1.0 - smoothstep(R_OUT * 0.7, R_OUT, r);
-  return cov * eye * mix(0.85, 1.0, uIntensity);
+  return vec2(cov * eye * mix(0.85, 1.0, uIntensity), hf);
 }
 
 // soft falloff so the noise, not the primitive, defines the cauliflower edges
@@ -90,12 +91,13 @@ float blob(vec3 p, vec3 c, vec3 r) { float l = length((p - c) / (r * 1.3)); retu
 // soft union: overlapping parts fuse into one mass instead of meeting at seams
 float fuse(float a, float b) { return a + b - a * b; }
 
-float cbCov(vec3 p, out float hf) {
+// returns vec2(coverage, hf)
+vec2 cbCov(vec3 p) {
   float g = uGrowth;
   float base = 0.42;
   float top = mix(1.8, 3.6, g);
-  hf = (p.y - base) / (top - base);
-  if (p.y < base - 0.05 || p.y > top + 0.55) return 0.0;
+  float hf = (p.y - base) / (top - base);
+  if (p.y < base - 0.05 || p.y > top + 0.55) return vec2(0.0, hf);
   float cov = 0.0;
   // main updraft: paired cauliflower turrets per level, tilted downshear (+x) with height
   for (int i = 0; i < 6; i++) {
@@ -123,13 +125,14 @@ float cbCov(vec3 p, out float hf) {
   cov = fuse(cov, fuse(anvil, shoulder));
   // flat, dark base
   cov *= smoothstep(base - 0.04, base + 0.1, p.y);
-  return sat(cov);
+  return vec2(sat(cov), hf);
 }
 
 // x = density, y = height fraction
 vec2 density(vec3 p, bool detail) {
-  float hf;
-  float cov = uMode < 0.5 ? vortexCov(p, hf) : cbCov(p, hf);
+  vec2 ch = uMode < 0.5 ? vortexCov(p) : cbCov(p);
+  float cov = ch.x;
+  float hf = ch.y;
   float rain = 0.0;
   if (uMode > 0.5 && p.y < 0.5) {
     // rain shaft under the core (dim, streaky)
@@ -140,7 +143,7 @@ vec2 density(vec3 p, bool detail) {
   if (cov < 0.004) return vec2(rain, 0.0);
   vec3 q = p;
   vec3 qd = p;
-  float scale;
+  float scale = 0.5;
   if (uMode < 0.5) {
     // differential rotation shears the noise into spiral streaks, faster near the eye
     float r = length(p.xz);
@@ -180,12 +183,12 @@ float EXT() { return uMode < 0.5 ? 20.0 : 13.0; }
 
 float lightOD(vec3 p) {
   float od = 0.0;
-  float st = uMode < 0.5 ? 0.07 : 0.1;
+  float st = uMode < 0.5 ? 0.1 : 0.14;
   float dist = 0.0;
-  for (int j = 0; j < 6; j++) {
+  for (int j = 0; j < 4; j++) {
     dist += st;
-    od += density(p + uSunDir * dist, j < 3).x * st;
-    st *= 1.65;
+    od += density(p + uSunDir * dist, false).x * st;
+    st *= 1.8;
   }
   return od * EXT() * (uMode < 0.5 ? 1.4 : 1.15);
 }
@@ -212,9 +215,9 @@ vec3 skyCol(vec3 rd) {
 // transmittance toward the sun from a surface point (cloud shadow)
 float surfaceShadow(vec3 p) {
   float od = 0.0;
-  float st = 0.16;
+  float st = 0.22;
   float t = 0.02 + st * ign(gl_FragCoord.xy + 17.0);
-  for (int j = 0; j < 18; j++) {
+  for (int j = 0; j < 10; j++) {
     vec3 s = p + uSunDir * t;
     if (s.y > 4.4) break;
     od += density(s, false).x * st;
@@ -223,43 +226,12 @@ float surfaceShadow(vec3 p) {
   return exp(-od * EXT() * 0.75);
 }
 
-vec3 surface(vec3 ro, vec3 rd, float tHit, out float dist) {
-  vec3 p = ro + rd * tHit;
-  dist = tHit;
-  float sh = surfaceShadow(p);
-  if (uGround < 0.5) {
-    // ocean: animated wave normal from the noise volume, Fresnel sky reflection, sun glint
-    float s = 1.6;
-    float e = 0.02;
-    vec3 w = vec3(uTime * 0.03, 0.37, uTime * 0.021);
-    float h0 = texture(uNoise, vec3(p.x * s, 0.0, p.z * s) + w).b;
-    float hx = texture(uNoise, vec3((p.x + e) * s, 0.0, p.z * s) + w).b;
-    float hz = texture(uNoise, vec3(p.x * s, 0.0, (p.z + e) * s) + w).b;
-    float h1 = texture(uNoise, vec3(p.x * s * 3.1, 0.2, p.z * s * 3.1) - w * 1.7).a;
-    float wk = exp(-tHit * 0.09);
-    vec3 n = normalize(vec3((-(hx - h0) / e * 0.012 - (h1 - 0.5) * 0.05) * wk, 1.0, (-(hz - h0) / e * 0.012) * wk));
-    float fres = 0.02 + 0.98 * pow(1.0 - max(dot(-rd, n), 0.0), 5.0);
-    vec3 refl = skyCol(reflect(rd, n)) * mix(0.3, 0.8, sh);
-    float r = length(p.xz);
-    // steel-grey sea; turquoise only where sunlight reaches the water inside the eye
-    float eyeWater = uMode < 0.5 ? 1.0 - smoothstep(uEye * 0.8, uEye * 1.3, r) : 0.0;
-    vec3 water = mix(vec3(0.010, 0.022, 0.032), mix(vec3(0.02, 0.05, 0.065), vec3(0.02, 0.2, 0.2), eyeWater), sh);
-    float spec = pow(max(dot(reflect(rd, n), uSunDir), 0.0), 220.0) * 5.0 * sh;
-    // whitecaps where the wind is strongest (under the eyewall)
-    float foam = uMode < 0.5 ? smoothstep(0.7, 0.9, h0) * smoothstep(R_OUT * 0.9, uEye, r) * 0.12 : 0.0;
-    return water * (1.0 - fres) + refl * fres + spec * SUN_COL * 0.3 + foam * vec3(0.8, 0.85, 0.9) * (0.3 + 0.7 * sh);
-  }
-  // land: dark monsoon plains with field texture, lit by the sun through the cloud
-  vec4 n = texture(uNoise, vec3(p.x * 0.25, 0.1, p.z * 0.25));
-  vec3 alb = mix(vec3(0.05, 0.075, 0.035), vec3(0.11, 0.1, 0.07), n.g) * (0.8 + 0.4 * n.a);
-  vec3 lit = alb * (SUN_COL * max(uSunDir.y, 0.0) * sh + SKY_ZEN * 0.9);
-  return lit;
-}
 
 vec3 aces(vec3 x) { return clamp((x * (2.51 * x + 0.03)) / (x * (2.43 * x + 0.59) + 0.14), 0.0, 1.0); }
 `;
 
 export const VOL_FRAG_MAIN = /* glsl */ `
+// main v2 – optimized for mid-range GPUs
 vec2 boxHit(vec3 ro, vec3 rd, vec3 bmin, vec3 bmax) {
   vec3 inv = 1.0 / rd;
   vec3 t0 = (bmin - ro) * inv;
@@ -276,12 +248,40 @@ void main() {
   vec3 ro = uCamPos;
 
   // background: sky or lit surface
-  vec3 bg;
+  vec3 bg = vec3(0.0);
   float bgDist = 1e4;
   bool ground = rd.y < -1e-4;
   if (ground) {
     float tg = -ro.y / rd.y;
-    bg = surface(ro, rd, tg, bgDist);
+    bgDist = tg;
+    // --- inlined surface(ro, rd, tg) ---
+    vec3 sp = ro + rd * tg;
+    // cheap shadow: single density lookup above the surface point
+    float sh = exp(-density(sp + uSunDir * 0.5, false).x * EXT() * 2.0);
+    if (uGround < 0.5) {
+      float ss = 1.6;
+      float se = 0.02;
+      vec3 sw = vec3(uTime * 0.03, 0.37, uTime * 0.021);
+      float h0 = texture(uNoise, vec3(sp.x * ss, 0.0, sp.z * ss) + sw).b;
+      float hx = texture(uNoise, vec3((sp.x + se) * ss, 0.0, sp.z * ss) + sw).b;
+      float hz = texture(uNoise, vec3(sp.x * ss, 0.0, (sp.z + se) * ss) + sw).b;
+      float h1 = texture(uNoise, vec3(sp.x * ss * 3.1, 0.2, sp.z * ss * 3.1) - sw * 1.7).a;
+      float wk = exp(-tg * 0.09);
+      vec3 sn = normalize(vec3((-(hx - h0) / se * 0.012 - (h1 - 0.5) * 0.05) * wk, 1.0, (-(hz - h0) / se * 0.012) * wk));
+      float fres = 0.02 + 0.98 * pow(1.0 - max(dot(-rd, sn), 0.0), 5.0);
+      vec3 refl = skyCol(reflect(rd, sn)) * mix(0.3, 0.8, sh);
+      float sr = length(sp.xz);
+      float eyeWater = uMode < 0.5 ? 1.0 - smoothstep(uEye * 0.8, uEye * 1.3, sr) : 0.0;
+      vec3 water = mix(vec3(0.010, 0.022, 0.032), mix(vec3(0.02, 0.05, 0.065), vec3(0.02, 0.2, 0.2), eyeWater), sh);
+      float spec = pow(max(dot(reflect(rd, sn), uSunDir), 0.0), 220.0) * 5.0 * sh;
+      float foam = uMode < 0.5 ? smoothstep(0.7, 0.9, h0) * smoothstep(R_OUT * 0.9, uEye, sr) * 0.12 : 0.0;
+      bg = water * (1.0 - fres) + refl * fres + spec * SUN_COL * 0.3 + foam * vec3(0.8, 0.85, 0.9) * (0.3 + 0.7 * sh);
+    } else {
+      vec4 sn2 = texture(uNoise, vec3(sp.x * 0.25, 0.1, sp.z * 0.25));
+      vec3 alb = mix(vec3(0.05, 0.075, 0.035), vec3(0.11, 0.1, 0.07), sn2.g) * (0.8 + 0.4 * sn2.a);
+      bg = alb * (SUN_COL * max(uSunDir.y, 0.0) * sh + SKY_ZEN * 0.9);
+    }
+    // --- end inlined surface ---
   } else {
     bg = skyCol(rd);
   }
@@ -320,8 +320,8 @@ void main() {
         float powder = 1.0 - exp(-2.0 * d * ext * 0.12);
         sunL *= mix(1.0, powder, 0.7 * (1.0 - 0.5 * sat(cosT)));
         float hf = sat(dh.y);
-        float ao = density(p + vec3(0.0, 0.06, 0.0), false).x + density(p + vec3(0.0, 0.18, 0.0), false).x * 0.8;
-        vec3 amb = mix(vec3(0.035, 0.045, 0.06), vec3(0.22, 0.27, 0.33), hf * hf) * exp(-ao * ext * 0.09) * (0.35 + 0.65 * exp(-od * 0.15));
+        // cheap AO approximation using the optical depth toward the sun
+        vec3 amb = mix(vec3(0.035, 0.045, 0.06), vec3(0.22, 0.27, 0.33), hf * hf) * (0.35 + 0.65 * exp(-od * 0.15));
         vec3 S = (sunL + amb) * sigma;
         // lightning lights the cloud from inside (blue-white)
         float fd = length(p - uFlashPos);

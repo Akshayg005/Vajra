@@ -166,7 +166,7 @@ export default function Storm3D() {
   const select = useStore((s) => s.select);
   const [local, setLocal] = useState<string | null>(null);
   const [view, setView] = useState<View>('vortex');
-  const [quality, setQuality] = useState<Quality>('high');
+  const [quality, setQuality] = useState<Quality>('low');
   const strongest = [...cells].sort((a, b) => b.maxDbz - a.maxDbz);
   const c = cells.find((x) => x.id === (local ?? selected)) ?? strongest[0];
   if (!c) return <div className="p-6 text-slate-400">No storm cells right now.</div>;

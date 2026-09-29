@@ -4,17 +4,17 @@ import { OrbitControls } from '@react-three/drei';
 import * as THREE from 'three';
 import { cn } from '@/lib/utils';
 import { boltPath, isCgBolt } from '@/engine/volume';
-import { cloudNoiseTexture } from './cloud-noise';
+import { cloudNoiseTexture, invalidateCloudNoise } from './cloud-noise';
 import { VOL_FRAG, VOL_FRAG_MAIN, VOL_VERT } from './volumetric-storm.glsl';
 
 export type StormMode = 'vortex' | 'cumulonimbus';
 export type StormQuality = 'low' | 'high' | 'ultra';
 
-/** primary raymarch steps and pixel budget per quality level (ultra is meant for desktop RTX-class GPUs) */
+/** primary raymarch steps and pixel budget per quality level */
 const QUALITY: Record<StormQuality, { steps: number; budget: number }> = {
-  low: { steps: 72, budget: 420_000 },
-  high: { steps: 128, budget: 1_100_000 },
-  ultra: { steps: 200, budget: 2_400_000 },
+  low: { steps: 48, budget: 350_000 },
+  high: { steps: 80, budget: 700_000 },
+  ultra: { steps: 128, budget: 1_200_000 },
 };
 
 const CAMERA: Record<StormMode, { pos: [number, number, number]; target: [number, number, number]; fov: number }> = {
@@ -74,6 +74,25 @@ function Volume({ mode, intensity, growth, anvil, eye, flashRate, steps }: Volum
     [],
   );
   useEffect(() => () => mat.dispose(), [mat]);
+
+  // Recover the 3D noise texture after a WebGL context loss + restore cycle
+  const gl = useThree((s) => s.gl);
+  useEffect(() => {
+    const canvas = gl.domElement;
+    const onLost = (e: Event) => { e.preventDefault(); };
+    const onRestored = () => {
+      invalidateCloudNoise();
+      const fresh = cloudNoiseTexture();
+      mat.uniforms.uNoise.value = fresh;
+    };
+    canvas.addEventListener('webglcontextlost', onLost);
+    canvas.addEventListener('webglcontextrestored', onRestored);
+    return () => {
+      canvas.removeEventListener('webglcontextlost', onLost);
+      canvas.removeEventListener('webglcontextrestored', onRestored);
+    };
+  }, [gl, mat]);
+
   const flash = useRef({ acc: 0, k: 0, level: 0 });
   const bolt = useRef<THREE.Line>(null);
   const boltGeo = useMemo(() => new THREE.BufferGeometry(), []);
